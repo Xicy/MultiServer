@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "MultiServer\Server.csproj", "{23C6542B-1286-4D54-AB5E-56E3B3487853}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "TcpClient\Client.csproj", "{3BD195A3-FC4F-4AB6-88E7-63C5D9165AE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{B2839D80-EE51-4D6D-AF42-2BDA5909F398}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{23C6542B-1286-4D54-AB5E-56E3B3487853}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23C6542B-1286-4D54-AB5E-56E3B3487853}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23C6542B-1286-4D54-AB5E-56E3B3487853}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23C6542B-1286-4D54-AB5E-56E3B3487853}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BD195A3-FC4F-4AB6-88E7-63C5D9165AE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BD195A3-FC4F-4AB6-88E7-63C5D9165AE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BD195A3-FC4F-4AB6-88E7-63C5D9165AE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BD195A3-FC4F-4AB6-88E7-63C5D9165AE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2839D80-EE51-4D6D-AF42-2BDA5909F398}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2839D80-EE51-4D6D-AF42-2BDA5909F398}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2839D80-EE51-4D6D-AF42-2BDA5909F398}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2839D80-EE51-4D6D-AF42-2BDA5909F398}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

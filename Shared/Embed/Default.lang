@@ -1,0 +1,31 @@
+﻿//NameSpace.Class.Method.Function.FunctionSection.FunctionName
+TRUE	True
+FALSE	False
+SERVER.PROGRAM.MAIN.TITLE	Server
+SERVER.PROGRAM.MAIN.CONSOLECOMMANDS.DESCRIPTION.STATUS	Show server status.
+SERVER.PROGRAM.MAIN.CONSOLECOMMANDS.DESCRIPTION.CHANGECRYPTER	To change client crypter.
+SERVER.PROGRAM.MAIN.CONSOLECOMMANDS.DESCRIPTION.PING	Send ping to client.
+SERVER.PROGRAM.HANDLESTATUS.STATUS	\nTotal Client Connected : {0}\nTotal Used Memory : {1} Mb
+SHARED.UTIL.LOG.EXCEPTION.DESCRIPTION	See log file for more details.
+SHARED.UTIL.FILEREADER.FILEREADER.FILENOTFOUNDEXCEPTION	File '{0}' not found.
+SHARED.UTIL.FILEREADER.GETENUMERATOR.FILENOTFOUNDEXCEPTION	Required file '{0}' not found.
+SHARED.UTIL.CLIUTIL.WRITEHEADER.HEADER	                  ,ggg,          ,gg                           \n                 dP"""Y8,      ,dP'                            \n                 Yb,_  "8b,   d8"                              \n                  `""    Y8,,8P'      gg                       \n                          Y88"        ""                       \n                         ,888b        gg     ,gggg,  gg     gg \n                        d8" "8b,      88    dP"  "Yb I8     8I \n                      ,8P'    Y8,     88   i8'       I8,   ,8I \n                     d8"       "Yb, _,88,_,d8,_    _,d8b, ,d8I \n                   ,8P'          "Y88P""Y8P""Y8888PPP""Y88P"888\n                                                          ,d8I'\n                                                        ,dP'8I \n                                                       ,8"  8I \n                                                       I8   8I \n                                                       `8, ,8I \n                                                        `Y8P"  
+SHARED.UTIL.CLIUTIL.EXIT.PRESSENTER	Press Enter to exit.
+SHARED.UTIL.CLIUTIL.EXIT.EXITING	Exiting...
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.HELP	Displays this help or command help
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.CLS	Clean Screen
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.EXIT	Closes application/server
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.STATUS	Displays application status
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.DEBUG	Change debug visibility
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.WAIT.HELP	Type 'help' for a list of console commands.
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.WAIT.INFO.UNKNOWN	Unknown command '{0}'
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.WAIT.ERROR.FAIL	Failed to run command '{0}'.
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.WAIT.INFO.USAGE	Usage: {0} {1}
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLEDEBUG.INFO	Debug now is {0}
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLEHELP.INFO.AVAILABLE	Available commands
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLEHELP.INFO.UNKNOWN	Unknown command '{0}'
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLEHELP.INFO.CODE	Name: {0} |Usage: {1}|Description: {2}
+SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLESTATUS.STATUS	Memory Usage: {0:N0} KB
+SHARED.NETWORK.PACKETHANDLERNANAGER.UNKNOWNPACKET.UNIMPLEMENTED	PacketHandlerManager: Handler for '{0:X4}', '{1}'.
+SHARED.NETWORK.PACKET.ISREADABLE.EXCEPTION	Buffer doesn't have enough bytes left.
+SHARED.NETWORK.PACKET.BUILD.EXCEPTION	Buffer too small for packet, use GetSize().

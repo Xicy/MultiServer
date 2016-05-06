@@ -1,0 +1,78 @@
+4.03.2016 21:36:14 [Status] - Server ready, listening on 0.0.0.0:8080.
+4.03.2016 21:36:14 [Info] - Konsol komutların listesi için 'help' yazın.
+4.03.2016 21:36:45 [Info] - Mevcut komutlar
+4.03.2016 21:36:45 [Info] -   ChangeCrypter  İstemci kriptosunu değiştirmek için.
+4.03.2016 21:36:45 [Info] -   cls            Ekranı temizle
+4.03.2016 21:36:45 [Info] -   debug          Debug görünürlüğünü değiştir
+4.03.2016 21:36:45 [Info] -   exit           Uygulamayı kapat
+4.03.2016 21:36:45 [Info] -   help           Bu yardımı veya komut yardımını görüntüler
+4.03.2016 21:36:45 [Info] -   Ping           İstemciye ping gönderin.
+4.03.2016 21:36:45 [Info] -   status         Sunucu durumunu gösterir.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15233.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15234.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15235.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15236.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15237.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15238.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15239.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15240.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15241.
+4.03.2016 21:37:04 [Debug] - Connection established from '127.0.0.1:15242.
+4.03.2016 21:37:24 [Status] - 
+Bağlı olan toplam istemci : 10
+Toplam kullanılan bellek : 1,065025 Mb
+4.03.2016 21:37:25 [Status] - 
+Bağlı olan toplam istemci : 10
+Toplam kullanılan bellek : 1,105019 Mb
+4.03.2016 21:37:25 [Status] - 
+Bağlı olan toplam istemci : 10
+Toplam kullanılan bellek : 1,118523 Mb
+4.03.2016 21:37:26 [Status] - 
+Bağlı olan toplam istemci : 10
+Toplam kullanılan bellek : 1,132454 Mb
+4.03.2016 21:37:27 [Status] - 
+Bağlı olan toplam istemci : 10
+Toplam kullanılan bellek : 1,17382 Mb
+4.03.2016 21:37:28 [Status] - 
+Bağlı olan toplam istemci : 10
+Toplam kullanılan bellek : 1,181633 Mb
+4.03.2016 21:37:28 [Status] - 
+Bağlı olan toplam istemci : 10
+Toplam kullanılan bellek : 1,195564 Mb
+4.03.2016 21:37:54 [Info] - Debug şuan Yanlış.
+4.03.2016 21:38:48 [Debug] - Request Login From 127.0.0.1:15239,0 Username:asd Password:dsa
+4.03.2016 21:38:58 [Info] - Debug şuan Doğru.
+4.03.2016 21:39:06 [Debug] - Request Login From 127.0.0.1:15237,0 Username:asd Password:dsa
+4.03.2016 21:39:18 [Info] - İsim: ChangeCrypter | Kullanımı: <port> | Açıklama: İstemci kriptosunu değiştirmek için.
+4.03.2016 21:39:40 [Debug] - Request Login From 127.0.0.1:15236,0 Username:asd Password:dsa
+4.03.2016 21:39:40 [Debug] - Request Login From 127.0.0.1:15238,0 Username:asd Password:dsa
+4.03.2016 21:39:41 [Debug] - Request Login From 127.0.0.1:15241,0 Username:asd Password:dsa
+4.03.2016 21:39:41 [Debug] - Request Login From 127.0.0.1:15239,0 Username:asd Password:dsa
+4.03.2016 21:39:41 [Debug] - Request Login From 127.0.0.1:15234,0 Username:asd Password:dsa
+4.03.2016 21:39:42 [Debug] - Request Login From 127.0.0.1:15239,0 Username:asd Password:dsa
+4.03.2016 21:39:42 [Debug] - Request Login From 127.0.0.1:15235,0 Username:asd Password:dsa
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15233.
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15238.
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15234.
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15235.
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15236.
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15237.
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15241.
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15240.
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15242.
+4.03.2016 21:40:12 [Debug] - Connection closed from '127.0.0.1:15239.
+4.03.2016 21:40:18 [Status] - 
+Bağlı olan toplam istemci : 0
+Toplam kullanılan bellek : 1,518837 Mb
+4.03.2016 21:40:21 [Status] - 
+Bağlı olan toplam istemci : 0
+Toplam kullanılan bellek : 0,2445145 Mb
+4.03.2016 21:40:22 [Status] - 
+Bağlı olan toplam istemci : 0
+Toplam kullanılan bellek : 0,2445145 Mb
+4.03.2016 21:40:22 [Status] - 
+Bağlı olan toplam istemci : 0
+Toplam kullanılan bellek : 0,2445145 Mb
+4.03.2016 21:40:22 [Status] - 
+Bağlı olan toplam istemci : 0
+Toplam kullanılan bellek : 0,2445145 Mb
