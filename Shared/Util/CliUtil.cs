@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Principal;
+using System.Text;
 
 namespace Shared.Util
 {
@@ -17,11 +19,17 @@ namespace Shared.Util
             _title = title;
             _color = color;
             if (title != null) { Console.Title = title; }
+
             Console.ForegroundColor = color;
-            Console.Write(Localization.Get("shared.util.cliutil.writeheader.header"));
+            var lines = Localization.Get("shared.util.cliutil.writeheader.header").Split('\n');
+            var left = new StringBuilder().Append(' ', (Console.WindowWidth - lines.Max(l => l.Length) - 1) / 2).ToString();
+            foreach (var line in lines)
+            {
+                Console.WriteLine(left + line);
+            }
+            Console.Write(new StringBuilder().Append('_', Console.WindowWidth).ToString());
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine("");
-            Console.Write(@"________________________________________________________________________________");
+
             Console.WriteLine("");
         }
         public static void WriteHeader()

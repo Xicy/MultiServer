@@ -1,49 +1,40 @@
 ﻿using System;
-using Shared.Util.Commands;
-using System.Collections.Generic;
+using Shared.Network;
+using Shared.Schema;
 using Shared.Util;
 
 namespace Client
 {
     class Program
     {
-        static ConsoleCommands console;
-        static List<TestClient> tc;
-        static Random rand = new Random();
-        static void Main(string[] args)
-        {
-            //Log.Archive = Environment.CurrentDirectory + @"/Log/";
-            //Log.LogFile = Log.Archive + AppDomain.CurrentDomain.FriendlyName.Replace(".exe", ".txt");
 
-            tc = new List<TestClient>();
-            Shared.Util.CliUtil.WriteHeader("Client", ConsoleColor.Green);
+        private static GameClient _client;
 
-            console = new ConsoleCommands();
-            console.Add("AddClient", "<count>", "Add client for test", HandleAddClient);
-            console.Add("CloseAll", "Close all client", HandleCloseAll);
-            console.Add("Login", "<username> <password>", "Login Request", HandleLogin);
+        public static void Main(string[] args)
+        {
+            CliUtil.LoadingTitle();
 
-            console.Wait();
-        }
+            CliUtil.WriteHeader(Localization.Get("Client.Program.Main.Title"), ConsoleColor.Green);
 
-        private static CommandResult HandleLogin(string command, IList<string> args)
-        {
-            var id = rand.Next(tc.Count);
-            tc[id].Login(args[1], args[2]);
-            return CommandResult.Okay;
-        }
-        private static CommandResult HandleAddClient(string command, IList<string> args)
-        {
-            int f;
-            if (args.Count != 2 || !int.TryParse(args[1], out f)) { return CommandResult.InvalidArgument; }
-            for (int i = 0; i < f; i++) { tc.Add(new TestClient().Connect<TestClient>("127.0.0.1", 8080)); }
-            return CommandResult.Okay;
-        }
-        private static CommandResult HandleCloseAll(string command, IList<string> args)
-        {
-            tc.ForEach(client => client.Disconnect());
-            tc.Clear();
-            return CommandResult.Okay;
+            _client = new GameClient().Connect<GameClient>("127.0.0.1", 8080);
+            Console.CursorVisible = false;
+
+            CliUtil.RunningTitle();
+
+            while (true)
+            {
+                var keyInfo = Console.ReadKey();
+                switch (keyInfo.Key)
+                {
+                    case ConsoleKey.Q: _client.Disconnect(); break;
+                    case ConsoleKey.W: _client = _client.State == ClientState.Connected ? _client : new GameClient().Connect<GameClient>("127.0.0.1", 8080); break;
+                    case ConsoleKey.LeftArrow: _client.Move(Directions.Left); break;
+                    case ConsoleKey.RightArrow: _client.Move(Directions.Right); break;
+                    case ConsoleKey.UpArrow: _client.Move(Directions.Up); break;
+                    case ConsoleKey.DownArrow: _client.Move(Directions.Down); break;
+                }
+            }
+
         }
 
     }

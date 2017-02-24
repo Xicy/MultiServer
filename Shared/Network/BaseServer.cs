@@ -41,7 +41,7 @@ namespace Shared.Network
 
         protected BaseServer()
         {
-            SocketListen = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) {NoDelay = true};
+            SocketListen = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             this.Clients = new List<TClient>();
         }
 
@@ -58,10 +58,8 @@ namespace Shared.Network
             try
             {
                 if (this.Handlers == null)
-                {
                     Log.Error("No packet handler manager set.");
-                    //return;
-                }
+
                 SocketListen.Bind(localEP);
                 SocketListen.Listen(200);
                 SocketListen.BeginAccept(OnAccept, this.SocketListen);
@@ -93,7 +91,7 @@ namespace Shared.Network
             {
                 client.Disconnected += c => { this.RemoveClient(client); };
                 client.HandleBuffer += (c, b) => { this.HandleBuffer((TClient)c, b); };
-                client.OnReceive((result.AsyncState as Socket).EndAccept(result));
+                client.OnReceive(((Socket)result.AsyncState).EndAccept(result));
 
                 this.AddClient(client);
                 Log.Debug("Connection established from '{0}.", client.Address);

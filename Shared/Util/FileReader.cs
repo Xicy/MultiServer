@@ -9,9 +9,9 @@ namespace Shared.Util
 {
     public class FileReader : IEnumerable<FileReaderLine>, IDisposable
     {
-        private string _filePath;
-        private string _relativePath;
-        private StreamReader _streamReader;
+        private readonly string _filePath;
+        private readonly string _relativePath;
+        private readonly StreamReader _streamReader;
 
         public int CurrentLine { get; protected set; }
 

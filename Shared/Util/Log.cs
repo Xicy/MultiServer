@@ -5,7 +5,7 @@ using System.Globalization;
 namespace Shared.Util
 {
     [Flags]
-    public enum LogLevel : int
+    public enum LogLevel : byte
     {
         None = 0,
         Info = 1,

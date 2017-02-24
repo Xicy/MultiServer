@@ -47,7 +47,7 @@ namespace Shared.Network
         }
         #endregion
 
-        #region Constructors
+        #region Attirbutes
         private Socket Socket { set; get; }
         private byte[] Buffer { set; get; }
         private MemoryStream ReceivedBuffer { set; get; }
@@ -78,7 +78,7 @@ namespace Shared.Network
 
                 Array.Clear(buffer, 0, buffer.Length);
             }
-            catch(SocketException)
+            catch (SocketException)
             {
                 Log.Debug("Connection lost from '{0}'.", this.Address);
                 this.OnDisconnected(this);
@@ -93,7 +93,10 @@ namespace Shared.Network
             this.Send(this.BuildPacket(packet));
         }
 
-        protected abstract byte[] BuildPacket(Packet packet);
+        protected virtual byte[] BuildPacket(Packet packet)
+        {
+            return packet.Build();
+        }
 
         public TClient Connect<TClient>(string host, int port) where TClient : BaseClient
         {
@@ -108,7 +111,7 @@ namespace Shared.Network
                     var sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     sock.SendTimeout = 60000;
                     sock.ReceiveTimeout = 60000;
-                    
+
                     sock.Connect(localEP);
                     this.OnReceive(sock);
                     this.OnConnected(this);
@@ -225,5 +228,5 @@ namespace Shared.Network
             }
         }
         protected virtual void CleanUp() { }
-    }  
+    }
 }

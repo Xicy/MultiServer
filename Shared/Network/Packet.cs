@@ -123,7 +123,6 @@ namespace Shared.Network
                 throw new IndexOutOfRangeException(Localization.Get("shared.network.packet.isreadable.exception"));
         }
 
-
         #region Write
         protected Packet WriteSimple(PacketElementTypes type, params byte[] val)
         {
@@ -506,6 +505,13 @@ namespace Shared.Network
                     case PacketElementTypes.Float: this.GetFloat(); break;
                     case PacketElementTypes.String: this.GetString(); break;
                     case PacketElementTypes.Bin: this.GetBin(); break;
+                    case PacketElementTypes.SByte:this.GetSByte();break;
+                    case PacketElementTypes.UShort:this.GetUShort();break;
+                    case PacketElementTypes.UInt:this.GetUInt();break;
+                    case PacketElementTypes.ULong:this.GetULong();break;
+                    case PacketElementTypes.Bool:this.GetBool();break;
+                    case PacketElementTypes.DateTime:this.GetDateTime();break;
+                    case PacketElementTypes.Packet:this.GetPacket();break;
                 }
             }
         }

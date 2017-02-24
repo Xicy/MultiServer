@@ -8,7 +8,7 @@ namespace Shared.Network
     {
         public delegate void PacketHandlerFunc(TClient client, Packet packet);
 
-        private Dictionary<ushort, PacketHandlerFunc> _handlers;
+        private readonly Dictionary<ushort, PacketHandlerFunc> _handlers;
 
         protected PacketHandlerManager()
         {
@@ -55,6 +55,7 @@ namespace Shared.Network
         }
     }
 
+    [AttributeUsage(AttributeTargets.Method)]
     public class PacketHandlerAttribute : Attribute
     {
         public ushort[] Ops { get; protected set; }

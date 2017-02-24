@@ -1,21 +1,43 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Shared;
 using Shared.Network;
+using Shared.Schema;
 using Shared.Util;
 
 namespace Client
 {
-    public partial class PacketHandler : PacketHandlerManager<TestClient>
+    public class PacketHandler : PacketHandlerManager<GameClient>
     {
+        public Dictionary<long, GameObject> GameObjects;
+
         public PacketHandler()
         {
             AutoLoad();
+            GameObjects = new Dictionary<long, GameObject>();
+        }
+
+        [PacketHandler(OpCodes.MoveObject)]
+        public void MoveObject(GameClient client, Packet packet)
+        {
+            var go = packet.GetObj<GameObject>();
+            if (GameObjects.ContainsKey(go.ID))
+            {
+                GameObjects[go.ID] = go;
+            }
+            else
+            {
+                GameObjects.Add(go.ID, go);
+            }
         }
 
         [PacketHandler(OpCodes.Crypter)]
-        public void Crypter(TestClient client, Packet packet)
+        public void Crypter(GameClient client, Packet packet)
         {
             client.ID = packet.GetLong();
+            GameObjects.Add(client.ID, client);
             string key = packet.GetString();
             client.Crypter = new Shared.Security.Blowfish(key);
             Log.Debug("Crypter changed new key: {0}", key);
@@ -23,20 +45,23 @@ namespace Client
         }
 
         [PacketHandler(OpCodes.Ping)]
-        public void Ping(TestClient client, Packet packet)
+        public void Ping(GameClient client, Packet packet)
         {
             client.LastPingTime = DateTime.Now;
-            //Log.Debug("Request Ping From {0} {1}", client.Address, packet.ToString());
-            System.Threading.Thread.Sleep(2000);
-            client.Ping();
+            Task.Delay(10).ContinueWith(task => client.Ping());
+
+            Console.Clear();
+            foreach (var cell in GameObjects.Values.ToArray())
+            {
+                Console.MoveBufferArea(cell.X, cell.Y, 1, 1, 0, 0, '@', cell.ID == client.ID ? ConsoleColor.Red : ConsoleColor.Green, ConsoleColor.Black);
+            }
         }
 
-        [PacketHandler(OpCodes.Login)]
-        public void Login(TestClient client, Packet packet)
+        [PacketHandler(999)]
+        public void RemoveObject(GameClient client, Packet packet)
         {
-            client.LastPingTime = DateTime.Now;
-            bool isLogin = packet.GetBool();
-            Log.Info("Request Login From {0} {1}", client.Address, isLogin);
+            var go = packet.GetObj<GameObject>();
+            GameObjects.Remove(go.ID);
         }
 
     }

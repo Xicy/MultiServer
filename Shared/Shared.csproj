@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Shared</RootNamespace>
     <AssemblyName>Shared</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -26,14 +26,17 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <CodeAnalysisRuleSet>GlobalizationRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\Output\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -44,6 +47,8 @@
     <Compile Include="Network\Packet.cs" />
     <Compile Include="Network\PacketHandlerManager.cs" />
     <Compile Include="OpCodes.cs" />
+    <Compile Include="Schema\Directions.cs" />
+    <Compile Include="Schema\GameObject.cs" />
     <Compile Include="Security\BlowFish.cs" />
     <Compile Include="Security\ICrypter.cs" />
     <Compile Include="Util\CliUtil.cs" />
@@ -56,12 +61,12 @@
     <Compile Include="Util\Random.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embed\Default.lang" />
+    <EmbeddedResource Include="Embed\Localization\en.lang" />
+    <EmbeddedResource Include="Embed\Localization\tr.lang" />
     <None Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Database\" />
-    <Folder Include="Schema\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
