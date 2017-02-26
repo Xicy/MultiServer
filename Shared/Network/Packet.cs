@@ -326,6 +326,9 @@ namespace Shared.Network
                     case PacketElementTypes.UInt: GetUInt(); break;
                     case PacketElementTypes.ULong: GetULong(); break;
                     case PacketElementTypes.Bool: GetBool(); break;
+                    case PacketElementTypes.Decimal:GetDecimal();break;
+                    case PacketElementTypes.Double:GetDouble();break;
+                    case PacketElementTypes.Char: GetChar(); break;
                 }
             }
         }

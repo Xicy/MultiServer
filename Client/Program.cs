@@ -26,7 +26,7 @@ namespace Client
                 switch (keyInfo.Key)
                 {
                     case ConsoleKey.Q: _client.Disconnect(); break;
-                    case ConsoleKey.W: _client = _client.State == ClientState.Connected ? _client : new GameClient().Connect<GameClient>("127.0.0.1", 8080); break;
+                    case ConsoleKey.W: _client.Connect<GameClient>("127.0.0.1", 8080); break;
                     case ConsoleKey.LeftArrow: _client.Move(Directions.Left); break;
                     case ConsoleKey.RightArrow: _client.Move(Directions.Right); break;
                     case ConsoleKey.UpArrow: _client.Move(Directions.Up); break;

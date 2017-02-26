@@ -6,6 +6,7 @@ namespace Client
 {
     public class GameClient : BaseClient
     {
+        public PacketHandler Handlers;
         public DateTime LastPingTime { set; get; }
         public long ID { get; set; }
         public byte X { get; set; }
@@ -16,7 +17,10 @@ namespace Client
             return new GameObject(client.ID, client.X, client.Y);
         }
 
-        public PacketHandlerManager<GameClient> Handlers { set; get; }
+        protected override void OnDisconnected(BaseClient client)
+        {
+            Handlers.GameObjects.Clear();
+        }
 
         public GameClient()
         {

@@ -4,13 +4,13 @@ using System.Collections.Generic;
 
 namespace Shared.Network
 {
-    public abstract class PacketHandlerManager<TClient> where TClient : BaseClient
+    public class PacketHandlerManager<TClient> where TClient : BaseClient //TODO:abstract
     {
         public delegate void PacketHandlerFunc(TClient client, Packet packet);
 
         private readonly Dictionary<ushort, PacketHandlerFunc> _handlers;
 
-        protected PacketHandlerManager()
+        public PacketHandlerManager()
         {
             _handlers = new Dictionary<ushort, PacketHandlerFunc>();
         }

@@ -36,8 +36,7 @@ namespace Shared.Util
         }
         public static void LoadByEmbededAssembly(Assembly assembly)
         {
-            if (assembly == null) return;//TODO:back version 
-            //throw new ArgumentNullException(nameof(assembly));
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
 
             foreach (var file in assembly.GetManifestResourceNames().Where(s => s.EndsWith(DefaultFileExtention)))
             {

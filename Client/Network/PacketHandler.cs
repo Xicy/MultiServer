@@ -48,7 +48,7 @@ namespace Client
         public void Ping(GameClient client, Packet packet)
         {
             client.LastPingTime = new DateTime(packet.GetLong());
-            Task.Delay(1000/30).ContinueWith(task => client.Ping());
+            Task.Delay(1000 / 30).ContinueWith(task => client.Ping());
 
             Console.Clear();
             foreach (var cell in GameObjects.Values.ToArray())

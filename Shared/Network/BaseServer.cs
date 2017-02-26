@@ -94,7 +94,7 @@ namespace Shared.Network
             try
             {
                 client.Disconnected += c => { RemoveClient(client); };
-                client.HandleBuffer += (c, b) => { HandleBuffer((TClient)c, b); };
+                client.HandleBuffer += (c, b) => { HandleBuffer(client, b); };
                 client.OnReceive(((Socket)result.AsyncState).EndAccept(result));
 
                 AddClient(client);

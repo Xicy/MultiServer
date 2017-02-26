@@ -106,5 +106,16 @@ namespace Shared.Test.Network
 
             var a = pck.ToString();
         }
+
+        [TestMethod]
+        public void Packet_Skip()
+        {
+            int i = 0;
+            for (Packet pck = new Packet(pack, 0); pck.Peek() != PacketElementTypes.None; i++)
+            {
+                pck.Skip();
+            }
+            Assert.AreEqual(i, 21, "Element Size Test");
+        }
     }
 }
