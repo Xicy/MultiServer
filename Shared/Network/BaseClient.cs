@@ -40,8 +40,10 @@ namespace Shared.Network
         private Socket Socket { set; get; }
         private byte[] Buffer { set; get; }
         private MemoryStream ReceivedBuffer { set; get; }
-        public ClientState State { set; get; }
         public ICrypter Crypter { set; get; }
+
+        private ClientState _state;
+        public ClientState State { set { _state = value; } get { return Socket == null || !Socket.Connected ? ClientState.Disconnected : _state; } }
 
         private string _address;
         public string Address { get { if (_address != null) return _address; try { _address = Socket.RemoteEndPoint.ToString(); } catch { _address = Localization.Get("Shared.Network.BaseClient.Address.Null"); } return _address; } }
@@ -50,7 +52,6 @@ namespace Shared.Network
         protected BaseClient()
         {
             Buffer = new byte[BufferDefaultSize];
-            ReceivedBuffer = new MemoryStream();
         }
 
         protected void Send(byte[] buffer)
@@ -90,14 +91,13 @@ namespace Shared.Network
         {
             try
             {
-                if (Socket == null)
+                if (State == ClientState.Disconnected)
                 {
                     var sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
                     {
                         SendTimeout = 60000,
                         ReceiveTimeout = 60000
                     };
-
                     sock.Connect(localEp);
                     OnReceive(sock);
                     OnConnected(this);
@@ -117,6 +117,8 @@ namespace Shared.Network
         internal void OnReceive(Socket socket)
         {
             Socket = socket;
+            State = ClientState.Connected;
+            ReceivedBuffer = new MemoryStream();
             Socket.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, OnReceive, this);
         }
         private void OnReceive(IAsyncResult result)
@@ -204,16 +206,16 @@ namespace Shared.Network
                 {
                     Socket.Shutdown(SocketShutdown.Both);
                     Socket.Close();
-                    Array.Clear(Buffer, 0, Buffer.Length);
                     Crypter?.Dispose();
-                    ReceivedBuffer.Close();
+                    Crypter = null;
+                    ReceivedBuffer?.Close();
+                    Array.Clear(Buffer, 0, Buffer.Length);
                 }
-                catch
+                finally
                 {
-                    // ignored
+                    CleanUp();
+                    State = ClientState.Disconnected;
                 }
-                CleanUp();
-                State = ClientState.Disconnected;
             }
             else
             {
