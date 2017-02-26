@@ -9,40 +9,51 @@ namespace Shared.Util
 {
     public static class Localization
     {
+        private const string DefaultLangName = "EN";
+        private const string DefaultFileExtention = "lang";
+
         private static readonly Dictionary<string, Dictionary<string, string>> Storage = new Dictionary<string, Dictionary<string, string>>();
 
         private static bool _isLoadDefault;
-        
+
         private static void LoadDefault()
         {
             if (_isLoadDefault) return;
             LoadByEmbededAssembly(Assembly.GetExecutingAssembly());
             LoadByEmbededAssembly(Assembly.GetEntryAssembly());
-            LoadByDirectory(Environment.CurrentDirectory, "*.lang", SearchOption.AllDirectories);
+            LoadByDirectory(Environment.CurrentDirectory, "*." + DefaultFileExtention);
             _isLoadDefault = true;
         }
 
-        public static void LoadByDirectory(string path, string searchPattern, SearchOption searchOption)
+        public static void LoadByDirectory(string path, string searchPattern, SearchOption searchOption = SearchOption.AllDirectories)
         {
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            if (string.IsNullOrEmpty(searchPattern)) throw new ArgumentNullException(nameof(searchPattern));
+
             foreach (var file in Directory.GetFiles(path, searchPattern, searchOption))
                 using (var fileReader = new FileReader(file))
                     Load(fileReader, Path.GetFileName(file));
         }
         public static void LoadByEmbededAssembly(Assembly assembly)
         {
-            foreach (var file in assembly.GetManifestResourceNames().Where(s => s.EndsWith("lang")))
+            if (assembly == null) return;//TODO:back version 
+            //throw new ArgumentNullException(nameof(assembly));
+
+            foreach (var file in assembly.GetManifestResourceNames().Where(s => s.EndsWith(DefaultFileExtention)))
             {
                 using (var fileReader = new FileReader(assembly.GetManifestResourceStream(file)))
                 {
                     var filename = file.Split('.');
-                    Load(fileReader, filename[filename.Length - 2] + ".lang");
+                    Load(fileReader, filename[filename.Length - 2] + "." + DefaultFileExtention);
                 }
             }
         }
 
         private static void Load(FileReader fileReader, string path)
         {
-            if (string.IsNullOrEmpty(path)) return;
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            if (fileReader == null) throw new ArgumentNullException(nameof(fileReader));
+
             var lang = Path.GetFileNameWithoutExtension(path).ToUpperInvariant();
             if (!Storage.ContainsKey(lang)) Storage[lang] = new Dictionary<string, string>();
             foreach (var eachLine in fileReader)
@@ -57,21 +68,24 @@ namespace Shared.Util
             }
         }
 
-        private const string DefaultLangName = "EN";
         public static string Get(string key)
         {
             return Get(key, CultureInfo.CurrentCulture.TwoLetterISOLanguageName);
         }
         public static string Get(string key, string lang)
         {
-            Dictionary<string, string> dic;
+            if (!_isLoadDefault)
+                LoadDefault();
+
             lang = lang.ToUpperInvariant();
-            if (!_isLoadDefault) { LoadDefault(); }
-            if (!Storage.TryGetValue(lang, out dic) && !Storage.TryGetValue(DefaultLangName, out dic)) return key;
+            key = key.ToUpperInvariant();
+
+            Dictionary<string, string> dic;
             string val;
-            if (dic.TryGetValue(key.ToUpperInvariant(), out val)) { return val; }
-            else if (lang == DefaultLangName) { return key; }
-            return Get(key, DefaultLangName);
+
+            if (Storage.TryGetValue(lang, out dic) && dic.TryGetValue(key, out val)) return val;
+            if (Storage.TryGetValue(DefaultLangName, out dic) && dic.TryGetValue(key, out val)) return val;
+            return key;
         }
     }
 }

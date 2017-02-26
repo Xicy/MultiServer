@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace Shared.Util
@@ -22,7 +21,7 @@ namespace Shared.Util
         public FileReader(string filePath)
         {
             if (!File.Exists(filePath))
-                throw new FileNotFoundException(string.Format(Localization.Get("shared.util.filereader.filereader.filenotfoundexception"), filePath));
+                throw new FileNotFoundException(string.Format(Localization.Get("Shared.Util.FileReader.FileReader.FileNotFoundException"), filePath));
 
             _filePath = filePath;
             _relativePath = Path.GetDirectoryName(Path.GetFullPath(filePath));
@@ -37,7 +36,7 @@ namespace Shared.Util
             // Until EOF
             while ((line = _streamReader.ReadLine()) != null)
             {
-                this.CurrentLine++;
+                CurrentLine++;
 
                 line = line.Trim();
 
@@ -74,7 +73,7 @@ namespace Shared.Util
                         }
                         else if (require)
                         {
-                            throw new FileNotFoundException(string.Format(Localization.Get("shared.util.filereader.getenumerator.filenotfoundexception"), includeFilePath));
+                            throw new FileNotFoundException(string.Format(Localization.Get("Shared.Util.FileReader.GetEnumerator.FileNotFoundException"), includeFilePath));
                         }
                     }
 
@@ -87,7 +86,7 @@ namespace Shared.Util
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         public void Dispose()
@@ -115,8 +114,8 @@ namespace Shared.Util
         /// <param name="file"></param>
         public FileReaderLine(string line, string file)
         {
-            this.Value = line;
-            this.File = file != null ? Path.GetFullPath(file) : file;
+            Value = line;
+            File = file != null ? Path.GetFullPath(file) : null;
         }
     }
 }

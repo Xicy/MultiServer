@@ -1,6 +1,6 @@
 ﻿//NameSpace.Class.Method.Function.FunctionSection.FunctionName
-SERVER.PROGRAM.MAIN.TITLE	Server
-SERVER.PROGRAM.MAIN.CONSOLECOMMANDS.DESCRIPTION.STATUS	Show server status.
-SERVER.PROGRAM.MAIN.CONSOLECOMMANDS.DESCRIPTION.CHANGECRYPTER	To change client crypter.
-SERVER.PROGRAM.MAIN.CONSOLECOMMANDS.DESCRIPTION.PING	Send ping to client.
-SERVER.PROGRAM.HANDLESTATUS.STATUS	\nTotal Client Connected : {0}\nTotal Used Memory : {1} Mb
+Server.Program.Main.Title	Server
+Server.Program.Main.ConsoleCommands.Description.Status	Show server status.
+Server.Program.Main.ConsoleCommands.Description.ChangeCrypter	To change client crypter.
+Server.Program.Main.ConsoleCommands.Description.Ping	Send ping to client.
+Server.Program.HandleStatus.Status	\nTotal Client Connected : {0}\nTotal Used Memory : {1} Mb

@@ -25,8 +25,8 @@
  |***************************************************************************/
 
 using System;
-using System.IO;
 using System.Text;
+using Shared.Util;
 
 namespace Shared.Security
 {
@@ -35,16 +35,16 @@ namespace Shared.Security
     /// </summary>
     public class Blowfish : ICrypter
     {
-        const int N = 16;
-        const int KEYBYTES = 8;
+        private const int N = 16;
 
-        static uint[] _P =
+        private static readonly uint[] _P =
         {
             0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344, 0xa4093822, 0x299f31d0,
             0x082efa98, 0xec4e6c89, 0x452821e6, 0x38d01377, 0xbe5466cf, 0x34e90c6c,
             0xc0ac29b7, 0xc97c50dd, 0x3f84d5b5, 0xb5470917, 0x9216d5d9, 0x8979fb1b
         };
-        static uint[,] _S =
+
+        private static readonly uint[,] _S =
         {
             {
                 0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7, 0xb8e1afed, 0x6a267e96,
@@ -228,8 +228,8 @@ namespace Shared.Security
             }
         };
 
-        uint[] P;
-        uint[,] S;
+        private uint[] _p;
+        private uint[,] _s;
 
         /// <summary>
         /// Constructs and initializes a blowfish instance with the supplied key.
@@ -244,8 +244,8 @@ namespace Shared.Security
             uint datal;
             uint datar;
 
-            P = _P.Clone() as uint[];
-            S = _S.Clone() as uint[,];
+            _p = _P.Clone() as uint[];
+            _s = _S.Clone() as uint[,];
 
             j = 0;
             for (i = 0; i < N + 2; ++i)
@@ -260,7 +260,7 @@ namespace Shared.Security
                         j = 0;
                     }
                 }
-                P[i] = P[i] ^ data;
+                _p[i] = _p[i] ^ data;
             }
 
             datal = 0x00000000;
@@ -269,8 +269,8 @@ namespace Shared.Security
             for (i = 0; i < N + 2; i += 2)
             {
                 Encipher(ref datal, ref datar);
-                P[i] = datal;
-                P[i + 1] = datar;
+                _p[i] = datal;
+                _p[i + 1] = datar;
             }
 
             for (i = 0; i < 4; ++i)
@@ -279,8 +279,8 @@ namespace Shared.Security
                 {
                     Encipher(ref datal, ref datar);
 
-                    S[i, j] = datal;
-                    S[i, j + 1] = datar;
+                    _s[i, j] = datal;
+                    _s[i, j + 1] = datar;
                 }
             }
         }
@@ -315,9 +315,9 @@ namespace Shared.Security
             x >>= 8;
             a = (ushort)(x & 0x00FF);
             //y = ((S[0][a] + S[1][b]) ^ S[2][c]) + S[3][d];
-            y = S[0, a] + S[1, b];
-            y = y ^ S[2, c];
-            y = y + S[3, d];
+            y = _s[0, a] + _s[1, b];
+            y = y ^ _s[2, c];
+            y = y + _s[3, d];
 
             return y;
         }
@@ -331,7 +331,7 @@ namespace Shared.Security
         {
             uint xl, xr;
             if ((length % 8) != 0)
-                throw new Exception("Invalid Length");
+                throw new Exception(Localization.Get("Shared.Security.Blowfish.InvalidLength"));
             for (int i = 0; i < length; i += 8)
             {
                 // Encode the data in 8 byte blocks.
@@ -367,7 +367,7 @@ namespace Shared.Security
 
             for (i = 0; i < N; ++i)
             {
-                Xl = Xl ^ P[i];
+                Xl = Xl ^ _p[i];
                 Xr = F(Xl) ^ Xr;
 
                 temp = Xl;
@@ -379,8 +379,8 @@ namespace Shared.Security
             Xl = Xr;
             Xr = temp;
 
-            Xr = Xr ^ P[N];
-            Xl = Xl ^ P[N + 1];
+            Xr = Xr ^ _p[N];
+            Xl = Xl ^ _p[N + 1];
 
             xl = Xl;
             xr = Xr;
@@ -408,7 +408,7 @@ namespace Shared.Security
         {
             uint xl, xr;
             if ((length % 8) != 0)
-                throw new Exception("Invalid Length");
+                throw new Exception(Localization.Get("Shared.Security.Blowfish.InvalidLength"));
             for (int i = 0; i < length; i += 8)
             {
                 // Encode the data in 8 byte blocks.
@@ -444,7 +444,7 @@ namespace Shared.Security
 
             for (i = N + 1; i > 1; --i)
             {
-                Xl = Xl ^ P[i];
+                Xl = Xl ^ _p[i];
                 Xr = F(Xl) ^ Xr;
 
                 /* Exchange Xl and Xr */
@@ -458,8 +458,8 @@ namespace Shared.Security
             Xl = Xr;
             Xr = temp;
 
-            Xr = Xr ^ P[1];
-            Xl = Xl ^ P[0];
+            Xr = Xr ^ _p[1];
+            Xl = Xl ^ _p[0];
 
             xl = Xl;
             xr = Xr;
@@ -492,10 +492,10 @@ namespace Shared.Security
 
         public void Dispose()
         {
-            GC.SuppressFinalize(S);
-            GC.SuppressFinalize(P);
-            S = null;
-            P = null;
+            GC.SuppressFinalize(_s);
+            GC.SuppressFinalize(_p);
+            _s = null;
+            _p = null;
             GC.SuppressFinalize(this);
         }
     }

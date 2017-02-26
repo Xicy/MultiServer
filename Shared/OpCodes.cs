@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Reflection;
+using Shared.Util;
 
 namespace Shared
 {
@@ -22,7 +23,7 @@ namespace Shared
             {
                 return field.Name;
             }
-            return "<NULL>";
+            return Localization.Get("SHARED.OpCodes.GetName.NULL");
         }
     }
 }

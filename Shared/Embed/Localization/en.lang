@@ -1,26 +1,62 @@
 ﻿//NameSpace.Class.Method.Function.FunctionSection.FunctionName
-TRUE	True
-FALSE	False
-SHARED.UTIL.LOG.EXCEPTION.DESCRIPTION	See log file for more details.
-SHARED.UTIL.FILEREADER.FILEREADER.FILENOTFOUNDEXCEPTION	File '{0}' not found.
-SHARED.UTIL.FILEREADER.GETENUMERATOR.FILENOTFOUNDEXCEPTION	Required file '{0}' not found.
-SHARED.UTIL.CLIUTIL.WRITEHEADER.HEADER	 ,ggg,          ,gg                           \ndP"""Y8,      ,dP'                            \nYb,_  "8b,   d8"                              \n `""    Y8,,8P'      gg                       \n         Y88"        ""                       \n        ,888b        gg     ,gggg,  gg     gg \n       d8" "8b,      88    dP"  "Yb I8     8I \n     ,8P'    Y8,     88   i8'       I8,   ,8I \n    d8"       "Yb, _,88,_,d8,_    _,d8b, ,d8I \n  ,8P'          "Y88P""Y8P""Y8888PPP""Y88P"888\n                                         ,d8I'\n                                       ,dP'8I \n                                      ,8"  8I \n                                      I8   8I \n                                      `8, ,8I \n                                       `Y8P"    
-SHARED.UTIL.CLIUTIL.EXIT.PRESSENTER	Press Enter to exit.
-SHARED.UTIL.CLIUTIL.EXIT.EXITING	Exiting...
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.HELP	Displays this help or command help
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.CLS	Clean Screen
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.EXIT	Closes application/server
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.STATUS	Displays application status
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.CONSOLECOMMANDS.DESCRIPTION.DEBUG	Change debug visibility
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.WAIT.HELP	Type 'help' for a list of console commands.
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.WAIT.INFO.UNKNOWN	Unknown command '{0}'
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.WAIT.ERROR.FAIL	Failed to run command '{0}'.
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.WAIT.INFO.USAGE	Usage: {0} {1}
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLEDEBUG.INFO	Debug now is {0}
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLEHELP.INFO.AVAILABLE	Available commands
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLEHELP.INFO.UNKNOWN	Unknown command '{0}'
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLEHELP.INFO.CODE	Name: {0} |Usage: {1}|Description: {2}
-SHARED.UTIL.COMMANDS.CONSOLECOMMANDS.HANDLESTATUS.STATUS	Memory Usage: {0:N0} KB
-SHARED.NETWORK.PACKETHANDLERNANAGER.UNKNOWNPACKET.UNIMPLEMENTED	PacketHandlerManager: Handler for '{0:X4}', '{1}'.
-SHARED.NETWORK.PACKET.ISREADABLE.EXCEPTION	Buffer doesn't have enough bytes left.
-SHARED.NETWORK.PACKET.BUILD.EXCEPTION	Buffer too small for packet, use GetSize().
+Shared.Util.CLIUtil.WriteHeader.Header	 ,ggg,          ,gg                           \ndP"""Y8,      ,dP'                            \nYb,_  "8b,   d8"                              \n `""    Y8,,8P'      gg                       \n         Y88"        ""                       \n        ,888b        gg     ,gggg,  gg     gg \n       d8" "8b,      88    dP"  "Yb I8     8I \n     ,8P'    Y8,     88   i8'       I8,   ,8I \n    d8"       "Yb, _,88,_,d8,_    _,d8b, ,d8I \n  ,8P'          "Y88P""Y8P""Y8888PPP""Y88P"888\n                                         ,d8I'\n                                       ,dP'8I \n                                      ,8"  8I \n                                      I8   8I \n                                      `8, ,8I \n                                       `Y8P"    
+
+True	True
+False	False
+Shared.Util.Log.Exception.Description	See log file for more details.
+Shared.Util.FileReader.FileReader.FileNotFoundException	File '{0}' not found.
+Shared.Util.FileReader.GetEnumerator.FileNotFoundException	Required file '{0}' not found.
+Shared.Util.CLIUtil.Exit.PressEnter	Press Enter to exit.
+Shared.Util.CLIUtil.Exit.Exiting	Exiting...
+Shared.Util.Commands.ConsoleCommands.Help	help
+Shared.Util.Commands.ConsoleCommands.Cls	cls
+Shared.Util.Commands.ConsoleCommands.Exit	exit
+Shared.Util.Commands.ConsoleCommands.Status	status
+Shared.Util.Commands.ConsoleCommands.Debug	debug
+Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.Help	Displays this help or command help
+Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Usage.Help	<CommandName>
+Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.CLS	Clean Screen
+Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.Exit	Closes application/server
+Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.Status	Displays application status
+Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.Debug	Change debug visibility
+Shared.Util.Commands.ConsoleCommands.Wait.Help	Type 'help' for a list of console commands.
+Shared.Util.Commands.ConsoleCommands.Wait.Info.Unknown	Unknown command '{0}'
+Shared.Util.Commands.ConsoleCommands.Wait.Error.Fail	Failed to run command '{0}'.
+Shared.Util.Commands.ConsoleCommands.Wait.Info.Usage	Usage: {0} {1}
+Shared.Util.Commands.ConsoleCommands.HandleDebug.Info	Debug now is {0}
+Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Available	Available commands
+Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Unknown	Unknown command '{0}'
+Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Code	Name: {0} |Usage: {1}|Description: {2}
+Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Null	<NULL>
+Shared.Util.Commands.ConsoleCommands.HandleStatus.Status	Memory Usage: {0:N0} KB
+Shared.Util.Commands.CommandManager.Command.InvalidOperationException	{0} is not a delegate type
+Shared.Network.PacketHandlerManager.UnknownPacket.UnImplemented	PacketHandlerManager: Handler for '{0:X4}', '{1}'.
+Shared.Network.Packet.IsReadable.Exception	Buffer doesn't have enough bytes left.
+Shared.Network.Packet.Build.Exception	Buffer too small for packet, use GetSize().
+Shared.Network.Packet.Write.Exception	Write object only takes byte[] and structs.
+Shared.Network.Packet.GetByte.Exception	Expected Byte, got {0}.
+Shared.Network.Packet.GetSByte.Exception	Expected SByte, got {0}.
+Shared.Network.Packet.GetBool.Exception	Expected Bool, got {0}.
+Shared.Network.Packet.GetShort.Exception	Expected Short, got {0}.
+Shared.Network.Packet.GetUShort.Exception	Expected UShort, got {0}.
+Shared.Network.Packet.GetInt.Exception	Expected Int, got {0}.
+Shared.Network.Packet.GetUInt.Exception	Expected UInt, got {0}.
+Shared.Network.Packet.GetLong.Exception	Expected Long, got {0}.
+Shared.Network.Packet.GetULong.Exception	Expected ULong, got {0}.
+Shared.Network.Packet.GetDateTime.Exception	Expected DateTime, got {0}.
+Shared.Network.Packet.GetFloat.Exception	Expected Float, got {0}.
+Shared.Network.Packet.GetString.Exception	Expected String, got {0}.
+Shared.Network.Packet.GetBin.Exception	Expected Bin, got {0}.
+Shared.Network.Packet.GetObj.Exception	GetObj can only marshal to structs.
+Shared.Network.Packet.GetPacket.Exception	Expected Packet, got {0}.
+Shared.Network.BaseServer.Start.HandlersNull	No packet handler manager set.
+Shared.Network.BaseServer.Start.ServerReady	Server ready, listening on {0}.
+Shared.Network.BaseServer.Start.Exception	Unable to set up socket; perhaps you're already running a server?
+Shared.Network.BaseServer.OnAccept.ConnectionEstablished	Connection established from '{0}.
+Shared.Network.BaseServer.OnAccept.Exception	While accepting connection.
+Shared.Network.BaseClient.Address.Null	<NULL>
+
+Shared.Network.BaseClient.Send.SocketException	Connection lost from '{0}'.
+
+Shared.OpCodes.GetName.Null	<NULL>
+Shared.Security.Blowfish.InvalidLength	Invalid Length

@@ -1,13 +1,12 @@
-﻿using System.IO;
-#if !DEBUG
+﻿#if !DEBUG
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
-#endif
 
 public static class Bootstrap
 {
-#if !DEBUG
+
     public static byte[] ReadAsBytes(this Stream input)
     {
         var array = new byte[16384];
@@ -23,14 +22,24 @@ public static class Bootstrap
         }
         return result;
     }
-#endif
 
     static void Main(string[] args)
     {
-#if !DEBUG
-        var assemblies = Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(n => n.EndsWith(".dll")).ToDictionary(n => n, n => Assembly.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream(n).ReadAsBytes()));
-        AppDomain.CurrentDomain.AssemblyResolve += (s, e) => assemblies.FirstOrDefault(kv => kv.Key == $"{new AssemblyName(e.Name).Name}.dll").Value;
-#endif
+        var assemblies =
+            Assembly.GetExecutingAssembly()
+                .GetManifestResourceNames()
+                .Where(n => n.EndsWith(".dll"))
+                .ToDictionary(n => n,
+                    n => Assembly.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream(n).ReadAsBytes()));
+        AppDomain.CurrentDomain.AssemblyResolve +=
+            (s, e) => assemblies.FirstOrDefault(kv => kv.Key == $"{new AssemblyName(e.Name).Name}.dll").Value;
+
         Client.Program.Main(args);
     }
 }
+#else
+public static class Bootstrap
+{
+    static void Main(string[] args) => Client.Program.Main(args);
+}
+#endif

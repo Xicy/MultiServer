@@ -22,34 +22,32 @@ namespace Shared.Network
 
         public void AutoLoad()
         {
-            foreach (var method in this.GetType().GetMethods())
+            foreach (var method in GetType().GetMethods())
             {
                 foreach (PacketHandlerAttribute attr in method.GetCustomAttributes(typeof(PacketHandlerAttribute), false))
                 {
                     var del = (PacketHandlerFunc)Delegate.CreateDelegate(typeof(PacketHandlerFunc), this, method);
                     foreach (var op in attr.Ops)
-                        this.Add(op, del);
+                        Add(op, del);
                 }
             }
         }
 
         public virtual void Handle(TClient client, Packet packet)
         {
-            //new System.Threading.Thread(() =>
-            //{
             PacketHandlerFunc handler;
             if (!_handlers.TryGetValue(packet.OpCode, out handler))
             {
-                this.UnknownPacket(client, packet);
+                UnknownPacket(client, packet);
                 return;
             }
-            handler(client, packet); packet.Dispose();
-            //}).Start(); //TODO:Thread
+            handler(client, packet);
+            packet.Dispose();
         }
 
         public virtual void UnknownPacket(TClient client, Packet packet)
         {
-            Log.Unimplemented(Localization.Get("shared.network.packethandlernanager.unknownpacket.unimplemented"), packet.OpCode, OpCodes.GetName(packet.OpCode));
+            Log.Unimplemented(Localization.Get("Shared.Network.PacketHandlerManager.UnknownPacket.UnImplemented"), packet.OpCode, OpCodes.GetName(packet.OpCode));
             Log.Debug(packet);
             packet.Dispose();
         }
@@ -62,7 +60,7 @@ namespace Shared.Network
 
         public PacketHandlerAttribute(params ushort[] ops)
         {
-            this.Ops = ops;
+            Ops = ops;
         }
     }
 }

@@ -15,5 +15,6 @@ namespace Server
         {
             return new GameObject(client.ID, client.X, client.Y);
         }
+
     }
 }

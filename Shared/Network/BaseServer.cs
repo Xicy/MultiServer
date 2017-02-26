@@ -10,8 +10,8 @@ namespace Shared.Network
     public abstract class BaseServer<TClient> where TClient : BaseClient, new()
     {
         //TODO:Localizaion
-        private Socket SocketListen;
-        private ReaderWriterLockSlim ListLock = new ReaderWriterLockSlim();
+        private readonly Socket _socketListen;
+        private readonly ReaderWriterLockSlim _listLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
         public List<TClient> Clients { protected set; get; }
         public PacketHandlerManager<TClient> Handlers { set; get; }
 
@@ -21,19 +21,13 @@ namespace Shared.Network
         public event ClientConnectionEventHandler ClientConnected;
         protected virtual void OnClientConnected(TClient client)
         {
-            if (this.ClientConnected != null)
-            {
-                this.ClientConnected(client);
-            }
+            ClientConnected?.Invoke(client);
         }
 
         public event ClientConnectionEventHandler ClientDisconnected;
         protected virtual void OnClientDisconnected(TClient client)
         {
-            if (this.ClientDisconnected != null)
-            {
-                this.ClientDisconnected(client);
-            }
+            ClientDisconnected?.Invoke(client);
         }
 
         protected abstract void HandleBuffer(TClient client, byte[] buffer);
@@ -41,47 +35,57 @@ namespace Shared.Network
 
         protected BaseServer()
         {
-            SocketListen = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
-            this.Clients = new List<TClient>();
+            _socketListen = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            Clients = new List<TClient>();
         }
 
         public void Start(int port)
         {
-            this.Start(new IPEndPoint(IPAddress.Any, port));
+            Start(new IPEndPoint(IPAddress.Any, port));
         }
         public void Start(string host, int port)
         {
-            this.Start(new IPEndPoint(IPAddress.Parse(host), port));
+            Start(new IPEndPoint(IPAddress.Parse(host), port));
         }
-        public void Start(IPEndPoint localEP)
+        public void Start(IPEndPoint localEp)
         {
             try
             {
-                if (this.Handlers == null)
-                    Log.Error("No packet handler manager set.");
+                if (Handlers == null)
+                    Log.Error(Localization.Get("Shared.Network.BaseServer.Start.HandlersNull"));
 
-                SocketListen.Bind(localEP);
-                SocketListen.Listen(200);
-                SocketListen.BeginAccept(OnAccept, this.SocketListen);
-                Log.Status("Server ready, listening on {0}.", this.SocketListen.LocalEndPoint);
+                _socketListen.Bind(localEp);
+                _socketListen.Listen(200);
+                _socketListen.BeginAccept(OnAccept, _socketListen);
+                Log.Status(Localization.Get("Shared.Network.BaseServer.Start.ServerReady"), _socketListen.LocalEndPoint);
             }
-            catch (Exception ex) { Log.Exception(ex, "Unable to set up socket; perhaps you're already running a server?"); }
+            catch (Exception ex) { Log.Exception(ex, Localization.Get("Shared.Network.BaseServer.Start.Exception")); }
         }
         public void Stop()
         {
+            using (_listLock.Read())
+                Clients.ForEach(client => RemoveClient(client));
+
+            _socketListen.Shutdown(SocketShutdown.Both);
+            _socketListen.Close();
+            /*
             try
             {
-                ListLock.EnterReadLock();
+                _listLock.EnterReadLock();
                 try
                 {
-                    this.Clients.ForEach(client => this.RemoveClient(client));
+                    Clients.ForEach(client => RemoveClient(client));
                 }
-                finally { ListLock.ExitReadLock(); }
+                finally { _listLock.ExitReadLock(); }
 
-                SocketListen.Shutdown(SocketShutdown.Both);
-                SocketListen.Close();
+                _socketListen.Shutdown(SocketShutdown.Both);
+                _socketListen.Close();
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
+            */
         }
 
         private void OnAccept(IAsyncResult result)
@@ -89,39 +93,34 @@ namespace Shared.Network
             var client = new TClient();
             try
             {
-                client.Disconnected += c => { this.RemoveClient(client); };
-                client.HandleBuffer += (c, b) => { this.HandleBuffer((TClient)c, b); };
+                client.Disconnected += c => { RemoveClient(client); };
+                client.HandleBuffer += (c, b) => { HandleBuffer((TClient)c, b); };
                 client.OnReceive(((Socket)result.AsyncState).EndAccept(result));
 
-                this.AddClient(client);
-                Log.Debug("Connection established from '{0}.", client.Address);
+                AddClient(client);
+                Log.Debug(Localization.Get("Shared.Network.BaseServer.OnAccept.ConnectionEstablished"), client.Address);
             }
             catch (ObjectDisposedException) { }
-            catch (Exception ex) { Log.Exception(ex, "While accepting connection."); }
-            finally { SocketListen.BeginAccept(this.OnAccept, SocketListen); }
+            catch (Exception ex) { Log.Exception(ex, Localization.Get("Shared.Network.BaseServer.OnAccept.Exception")); }
+            finally { _socketListen.BeginAccept(OnAccept, _socketListen); }
         }
 
         protected void AddClient(TClient client)
         {
-            ListLock.EnterWriteLock();
-            try
+            using (_listLock.Write())
             {
-                this.Clients.Add(client);
-                this.OnClientConnected(client);
+                Clients.Add(client);
+                OnClientConnected(client);
             }
-            finally { ListLock.ExitWriteLock(); }
-
         }
         protected void RemoveClient(TClient client, bool kill = true)
         {
-            ListLock.EnterWriteLock();
-            try
+            using (_listLock.Write())
             {
-                this.Clients.Remove(client);
-                this.OnClientDisconnected(client);
-                if (kill) { client.Disconnect(); }
+                Clients.Remove(client);
+                OnClientDisconnected(client);
+                if (kill && client.State != ClientState.Disconnected) client.Disconnect();
             }
-            finally { ListLock.ExitWriteLock(); }
         }
     }
 }

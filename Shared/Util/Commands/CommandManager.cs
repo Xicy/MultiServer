@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 
 namespace Shared.Util.Commands
 {
@@ -13,11 +12,11 @@ namespace Shared.Util.Commands
         where TCommand : Command<TFunc>
         where TFunc : class
     {
-        protected Dictionary<string, TCommand> _commands;
+        protected Dictionary<string, TCommand> Commands;
 
         protected CommandManager()
         {
-            _commands = new Dictionary<string, TCommand>();
+            Commands = new Dictionary<string, TCommand>();
         }
 
         /// <summary>
@@ -26,7 +25,7 @@ namespace Shared.Util.Commands
         /// <param name="command"></param>
         protected void Add(TCommand command)
         {
-            _commands[command.Name] = command;
+            Commands[command.Name] = command;
         }
 
         /// <summary>
@@ -69,7 +68,7 @@ namespace Shared.Util.Commands
         public TCommand GetCommand(string name)
         {
             TCommand command;
-            _commands.TryGetValue(name, out command);
+            Commands.TryGetValue(name, out command);
             return command;
         }
     }
@@ -88,12 +87,12 @@ namespace Shared.Util.Commands
         protected Command(string name, string usage, string description, TFunc func)
         {
             if (!typeof(TFunc).IsSubclassOf(typeof(Delegate)))
-                throw new InvalidOperationException(typeof(TFunc).Name + " is not a delegate type");
+                throw new InvalidOperationException(string.Format(Localization.Get("Shared.Util.Commands.CommandManager.Command.InvalidOperationException"), typeof(TFunc).Name));
 
-            this.Name = name;
-            this.Usage = usage;
-            this.Description = description;
-            this.Func = func;
+            Name = name;
+            Usage = usage;
+            Description = description;
+            Func = func;
         }
     }
 

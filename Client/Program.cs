@@ -9,7 +9,6 @@ namespace Client
     {
 
         private static GameClient _client;
-
         public static void Main(string[] args)
         {
             CliUtil.LoadingTitle();

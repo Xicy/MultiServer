@@ -13,7 +13,7 @@ namespace Client
         }
         public static void Ping(this GameClient client)
         {
-            client.Send(new Packet(OpCodes.Ping, client.ID).Write(DateTime.Now));
+            client.Send(new Packet(OpCodes.Ping, client.ID).Write(DateTime.Now.Ticks));
         }
         public static void Move(this GameClient client, Directions dir)
         {

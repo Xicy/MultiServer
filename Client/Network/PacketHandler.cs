@@ -47,8 +47,8 @@ namespace Client
         [PacketHandler(OpCodes.Ping)]
         public void Ping(GameClient client, Packet packet)
         {
-            client.LastPingTime = DateTime.Now;
-            Task.Delay(10).ContinueWith(task => client.Ping());
+            client.LastPingTime = new DateTime(packet.GetLong());
+            Task.Delay(1000/30).ContinueWith(task => client.Ping());
 
             Console.Clear();
             foreach (var cell in GameObjects.Values.ToArray())

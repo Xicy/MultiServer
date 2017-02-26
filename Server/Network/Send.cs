@@ -17,7 +17,7 @@ namespace Server
         }
         public static void Ping(this GameClient client)
         {
-            client.Send(new Packet(OpCodes.Ping, OpCodes.ServerID).Write(DateTime.Now));
+            client.Send(new Packet(OpCodes.Ping, OpCodes.ServerID).Write(DateTime.Now.Ticks));
         }
 
         public static void Move(this GameClient client, GameObject obj)

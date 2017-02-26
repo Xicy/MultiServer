@@ -116,7 +116,7 @@ namespace Shared.Util
             if (description != null)
             {
                 if (Hide.HasFlag(LogLevel.Exception))
-                    description += " " + Localization.Get("shared.util.log.exception.description");
+                    description += " " + Localization.Get("Shared.Util.Log.Exception.Description");
 
                 WriteLine(LogLevel.Error, description, args);
             }

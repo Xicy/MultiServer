@@ -21,7 +21,7 @@ namespace Client
         public GameClient()
         {
             Handlers = new PacketHandler();
-            HandleBuffer += (c, b) => this.Handlers.Handle((GameClient)c, new Packet(b, 0));
+            HandleBuffer += (c, b) => Handlers.Handle((GameClient)c, new Packet(b, 0));
         }
     }
 }

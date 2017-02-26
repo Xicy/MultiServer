@@ -1,6 +1,6 @@
 ﻿//NameSpace.Class.Method.Function.FunctionSection.FunctionName
-SERVER.PROGRAM.MAIN.TITLE	Sunucu
-SERVER.PROGRAM.MAIN.CONSOLECOMMANDS.DESCRIPTION.STATUS	Sunucu durumunu gösterir.
-SERVER.PROGRAM.MAIN.CONSOLECOMMANDS.DESCRIPTION.CHANGECRYPTER	İstemci kriptosunu değiştirmek için.
-SERVER.PROGRAM.MAIN.CONSOLECOMMANDS.DESCRIPTION.PING	İstemciye ping gönderin.
-SERVER.PROGRAM.HANDLESTATUS.STATUS	\nBağlı olan toplam istemci : {0}\nToplam kullanılan bellek : {1} Mb
+Server.Program.Main.Title	Sunucu
+Server.Program.Main.ConsoleCommands.Description.Status	Sunucu durumunu gösterir.
+Server.Program.Main.ConsoleCommands.Description.ChangeCrypter	İstemci kriptosunu değiştirmek için.
+Server.Program.Main.ConsoleCommands.Description.Ping	İstemciye ping gönderin.
+Server.Program.HandleStatus.Status	\nBağlı olan toplam istemci : {0}\nToplam kullanılan bellek : {1} Mb

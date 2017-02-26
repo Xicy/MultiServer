@@ -7,9 +7,6 @@ namespace Shared.Util
 {
     public class CliUtil
     {
-        /// <summary>
-        /// Prints Aura's ASCII art.
-        /// </summary>
         /// <param name="title">Name of this server (for the console's title)</param>
         /// <param name="color">Color of the header</param>
         private static string _title;
@@ -21,7 +18,7 @@ namespace Shared.Util
             if (title != null) { Console.Title = title; }
 
             Console.ForegroundColor = color;
-            var lines = Localization.Get("shared.util.cliutil.writeheader.header").Split('\n');
+            var lines = Localization.Get("Shared.Util.CLIUtil.WriteHeader.Header").Split('\n');
             var left = new StringBuilder().Append(' ', (Console.WindowWidth - lines.Max(l => l.Length) - 1) / 2).ToString();
             foreach (var line in lines)
             {
@@ -62,10 +59,10 @@ namespace Shared.Util
         {
             if (wait)
             {
-                Log.Info(Localization.Get("shared.util.cliutil.exit.pressenter"));
+                Log.Info(Localization.Get("Shared.Util.CLIUtil.Exit.PressEnter"));
                 Console.ReadLine();
             }
-            Log.Info(Localization.Get("shared.util.cliutil.exit.exiting"));
+            Log.Info(Localization.Get("Shared.Util.CLIUtil.Exit.Exiting"));
             Environment.Exit(exitCode);
         }
 

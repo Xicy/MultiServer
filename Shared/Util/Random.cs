@@ -6,7 +6,7 @@ namespace Shared.Util
 {
     public static class URandom
     {
-        private static Random Rand = new Random((int)DateTime.Now.Ticks);
+        private static readonly Random Rand = new Random((int)DateTime.Now.Ticks);
 
         public const string PattenLower = "abcdefghijklmnopqrstuvwxyz";
         public const string PattenUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -14,20 +14,14 @@ namespace Shared.Util
         public const string PattenSpecial = "!\"#$%&'()*+`-./:;<=>?@[\\]^_[]";
         public const string PattenAll = PattenUpper + PattenLower + PattenInt + PattenSpecial;
 
-        /// <summary>
-        /// Get random string
-        /// </summary>
-        /// <param name="Length">string length</param>
-        /// <param name="Patten"></param>
-        /// 
-        public static string String(int Length, string Patten)
+        public static string String(int length, string patten)
         {
-            return new string(Enumerable.Repeat(Patten, Length).Select(s => s[Rand.Next(s.Length)]).ToArray());
+            return new string(Enumerable.Repeat(patten, length).Select(s => s[Rand.Next(s.Length)]).ToArray());
         }
-        public static string String(int Length)
+        public static string String(int length)
         {
-            var data = new byte[Length];
-            for (int i = 0; i < data.Length; i++)
+            var data = new byte[length];
+            for (var i = 0; i < data.Length; i++)
             {
                 data[i] = (byte)Rand.Next(32, 127);
             }
@@ -59,9 +53,9 @@ namespace Shared.Util
         }
         public static long Long(long min, long max)
         {
-            byte[] buf = new byte[8];
+            var buf = new byte[8];
             Rand.NextBytes(buf);
-            long longRand = BitConverter.ToInt64(buf, 0);
+            var longRand = BitConverter.ToInt64(buf, 0);
             return (Math.Abs(longRand % (max - min)) + min);
         }
         public static double Double()

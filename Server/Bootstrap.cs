@@ -1,10 +1,12 @@
-﻿using System;
+﻿#if !DEBUG
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
 public static class Bootstrap
 {
+
     public static byte[] ReadAsBytes(this Stream input)
     {
         var array = new byte[16384];
@@ -23,10 +25,21 @@ public static class Bootstrap
 
     static void Main(string[] args)
     {
-#if !DEBUG
-        var assemblies = Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(n => n.EndsWith(".dll")).ToDictionary(n => n, n => Assembly.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream(n).ReadAsBytes()));
-        AppDomain.CurrentDomain.AssemblyResolve += (s, e) => assemblies.FirstOrDefault(kv => kv.Key == $"{new AssemblyName(e.Name).Name}.dll").Value;
-#endif
+        var assemblies =
+            Assembly.GetExecutingAssembly()
+                .GetManifestResourceNames()
+                .Where(n => n.EndsWith(".dll"))
+                .ToDictionary(n => n,
+                    n => Assembly.Load(Assembly.GetExecutingAssembly().GetManifestResourceStream(n).ReadAsBytes()));
+        AppDomain.CurrentDomain.AssemblyResolve +=
+            (s, e) => assemblies.FirstOrDefault(kv => kv.Key == $"{new AssemblyName(e.Name).Name}.dll").Value;
+
         Server.Program.Main(args);
     }
 }
+#else
+public static class Bootstrap
+{
+    static void Main(string[] args) => Server.Program.Main(args);
+}
+#endif
