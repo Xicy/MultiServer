@@ -2,50 +2,51 @@
 using System.IO;
 using System.Net;
 using Shared.Util;
+using Shared.Security;
 using System.Net.Sockets;
 
 namespace Shared.Network
 {
-    public enum ClientState : byte { Disconnected, Connected }
-    public abstract class BaseClient<TClient> where TClient : BaseClient<TClient>
+    public enum ClientState { Connected, Disconnected }
+    public abstract class BaseClient
     {
-        #region Fields
-        private const int BufferDefaultSize = 1024;
-        private readonly object _rwLock = new object();
-
-        private Socket Socket { set; get; }
-        private byte[] Buffer { get; }
-        private MemoryStream ReceivedBuffer { set; get; }
-
-        public ClientState State { set; get; }
-
-        private string _address;
-        public string Address { get { if (_address != null) return _address; try { _address = Socket.RemoteEndPoint.ToString(); } catch { _address = Localization.Get("Shared.Network.BaseClient.Address.Null"); } return _address; } }
-        #endregion
-
+        private const int BufferDefaultSize = 1024 * 2;
+        private readonly object _receiveLock = new object();
 
         #region Events
-        public delegate void HandleBufferEventHandler(TClient client, byte[] buffer);
+        public delegate void HandleBufferEventHandler(BaseClient client, byte[] buffer);
         public event HandleBufferEventHandler HandleBuffer;
-        protected internal virtual void OnHandleBuffer(TClient client, byte[] buffer)
+        protected internal virtual void OnHandleBuffer(BaseClient client, byte[] buffer)
         {
             HandleBuffer?.Invoke(client, buffer);
         }
 
-        public delegate void ConnectionEventHandler(TClient client);
+        public delegate void ConnectionEventHandler(BaseClient client);
 
         public event ConnectionEventHandler Connected;
-        protected internal virtual void OnConnected(TClient client)
+        protected internal virtual void OnConnected(BaseClient client)
         {
             Connected?.Invoke(client);
         }
 
         public event ConnectionEventHandler Disconnected;
-        protected internal virtual void OnDisconnected(TClient client)
+        protected internal virtual void OnDisconnected(BaseClient client)
         {
-            if (State == ClientState.Connected) Disconnect();
             Disconnected?.Invoke(client);
         }
+        #endregion
+
+        #region Attirbutes
+        private Socket Socket { set; get; }
+        private byte[] Buffer { set; get; }
+        private MemoryStream ReceivedBuffer { set; get; }
+        public ICrypter Crypter { set; get; }
+
+        private ClientState _state;
+        public ClientState State { set { _state = value; } get { return Socket == null || !Socket.Connected ? ClientState.Disconnected : _state; } }
+
+        private string _address;
+        public string Address { get { if (_address != null) return _address; try { _address = Socket.RemoteEndPoint.ToString(); } catch { _address = Localization.Get("Shared.Network.BaseClient.Address.Null"); } return _address; } }
         #endregion
 
         protected BaseClient()
@@ -56,31 +57,37 @@ namespace Shared.Network
         protected void Send(byte[] buffer)
         {
             if (State != ClientState.Connected) return;
+            Crypter?.EncodeBuffer(ref buffer);
             try
             {
                 Array.Resize(ref buffer, buffer.Length + 4);
-                System.Buffer.BlockCopy(buffer, 0, buffer, 4, buffer.Length - 4);
+                Array.Copy(buffer, 0, buffer, 4, buffer.Length - 4);
                 BitConverter.GetBytes(buffer.Length).CopyTo(buffer, 0);
 
                 Socket.Send(buffer);
+
                 Array.Clear(buffer, 0, buffer.Length);
             }
             catch (SocketException)
             {
-                Log.Debug(Localization.Get("Shared.Network.BaseClient.Send.SocketException"), Address);
-                OnDisconnected((TClient)this);
+                Log.Debug("Connection lost from '{0}'.", Address);//TODO:HERE
+                OnDisconnected(this);
             }
             catch (Exception ex)
             {
-                Log.Exception(ex, Localization.Get("Shared.Network.BaseClient.Send.Exception"), Address, ex.Message);
+                Log.Exception(ex, "Unable to send packet to '{0}'. ({1})", Address, ex.Message);
             }
         }
-
-        public TClient Connect(string host, int port)
+        public void Send(Packet packet)
         {
-            return Connect(new IPEndPoint(IPAddress.Parse(host), port));
+            Send(BuildPacket(packet));
         }
-        public TClient Connect(IPEndPoint localEp)
+
+        public TClient Connect<TClient>(string host, int port) where TClient : BaseClient
+        {
+            return Connect<TClient>(new IPEndPoint(IPAddress.Parse(host), port));
+        }
+        public TClient Connect<TClient>(IPEndPoint localEp) where TClient : BaseClient
         {
             try
             {
@@ -93,12 +100,12 @@ namespace Shared.Network
                     };
                     sock.Connect(localEp);
                     OnReceive(sock);
-                    OnConnected((TClient)this);
-                    Log.Status(Localization.Get("Shared.Network.BaseClient.Connect.Ready"), Address);
+                    OnConnected(this);
+                    Log.Status("Client ready, listening on {0}.", Address);
                 }
                 else
                 {
-                    Log.Warning(Localization.Get("Shared.Network.BaseClient.Connect.AlreadyConnected"));
+                    Log.Warning("Client already connected!");
                 }
             }
             catch (Exception ex)
@@ -116,8 +123,8 @@ namespace Shared.Network
         }
         private void OnReceive(IAsyncResult result)
         {
-            var client = (TClient)result.AsyncState;
-            lock (_rwLock)
+            var client = (BaseClient)result.AsyncState;
+            lock (_receiveLock)
             {
                 try
                 {
@@ -125,7 +132,7 @@ namespace Shared.Network
 
                     if (bytesReceived == 0)
                     {
-                        Log.Debug(Localization.Get("Shared.Network.BaseClient.OnReceive.Closed"), client.Address);
+                        Log.Debug("Connection closed from '{0}.", client.Address);
                         OnDisconnected(client);
                         return;
                     }
@@ -140,15 +147,16 @@ namespace Shared.Network
                         {
                             var buffer = new byte[packetSize - 4];
                             client.ReceivedBuffer.Read(buffer, 0, packetSize - 4);
+                            client.Crypter?.DecodeBuffer(ref buffer);
                             OnHandleBuffer(client, buffer);
 
                             var copyData = new byte[client.ReceivedBuffer.Length - packetSize];
-                            client.ReceivedBuffer.Read(copyData, 0, copyData.Length);
+                            Array.Copy(client.ReceivedBuffer.ToArray(), packetSize, copyData, 0, copyData.Length);
                             client.ReceivedBuffer.Position = 0;
                             client.ReceivedBuffer.Write(copyData, 0, copyData.Length);
                             client.ReceivedBuffer.SetLength(copyData.Length);
                             client.ReceivedBuffer.Position = copyData.Length;
-                            if (copyData.Length == 0) break;
+                            if (copyData.Length == 0) { break; }
                             Array.Clear(copyData, 0, copyData.Length);
                         }
                         else
@@ -160,7 +168,7 @@ namespace Shared.Network
 
                     if (client.State == ClientState.Disconnected)
                     {
-                        Log.Debug(Localization.Get("Shared.Network.BaseClient.OnReceive.Disconnected"), client.Address);
+                        Log.Debug("Disconnected connection from '{0}'.", client.Address);
                         OnDisconnected(client);
                         return;
                     }
@@ -169,23 +177,28 @@ namespace Shared.Network
                 }
                 catch (SocketException)
                 {
-                    Log.Debug(Localization.Get("Shared.Network.BaseClient.OnReceive.SocketException"), client.Address);
+                    Log.Debug("Connection lost from '{0}'.", client.Address);
                     OnDisconnected(client);
                 }
                 catch (ObjectDisposedException)
                 {
-                    Log.Debug(Localization.Get("Shared.Network.BaseClient.OnReceive.ObjectDisposedException"), client.Address);
+                    Log.Debug("Socket disposed '{0}'.", client.Address);
                     OnDisconnected(client);
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception(ex, Localization.Get("Shared.Network.BaseClient.OnReceive.Exception"), client.Address);
+                    Log.Exception(ex, "While receiving data from '{0}'.", client.Address);
                     OnDisconnected(client);
                 }
             }
         }
 
-        public void Disconnect()
+        protected virtual byte[] BuildPacket(Packet packet)
+        {
+            return packet.Build();
+        }
+
+        public virtual void Disconnect()
         {
             if (State != ClientState.Disconnected)
             {
@@ -193,6 +206,8 @@ namespace Shared.Network
                 {
                     Socket.Shutdown(SocketShutdown.Both);
                     Socket.Close();
+                    Crypter?.Dispose();
+                    Crypter = null;
                     ReceivedBuffer?.Close();
                     Array.Clear(Buffer, 0, Buffer.Length);
                 }
@@ -204,7 +219,7 @@ namespace Shared.Network
             }
             else
             {
-                Log.Warning(Localization.Get("Shared.Network.BaseClient.Disconnect.AlreadyDisconnected"));
+                Log.Warning("Client got disconnected multiple times." + Environment.NewLine + Environment.StackTrace);
             }
         }
         protected virtual void CleanUp() { }

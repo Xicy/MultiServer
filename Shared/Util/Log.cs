@@ -131,10 +131,10 @@ namespace Shared.Util
 
         public static void Progress(int current, int max)
         {
-            var donePerc = 100f / max * current;
+            var donePerc = (100f / max * current);
             var done = (int)Math.Ceiling(20f / max * current);
 
-            Write(LogLevel.Info, false, "[" + "".PadRight(done, '#') + "".PadLeft(20 - done, '.') + "] {0,5}%\r", donePerc.ToString("0.0", CultureInfo.InvariantCulture));
+            Write(LogLevel.Info, false, "[" + ("".PadRight(done, '#') + "".PadLeft(20 - done, '.')) + "] {0,5}%\r", donePerc.ToString("0.0", CultureInfo.InvariantCulture));
         }
 
         public static void WriteLine(LogLevel level, string format, params object[] args)
@@ -170,7 +170,7 @@ namespace Shared.Util
                     }
 
                     if (level != LogLevel.None)
-                        Console.Write("[{0}]", Localization.Get("Shared.Util.LogLevel." + level));
+                        Console.Write("[{0}]", level);
 
                     Console.ForegroundColor = ConsoleColor.Gray;
 
@@ -186,7 +186,7 @@ namespace Shared.Util
                     {
                         file.Write(DateTime.Now + " ");
                         if (level != LogLevel.None)
-                            file.Write("[{0}] - ", Localization.Get("Shared.Util.LogLevel." + level));
+                            file.Write("[{0}] - ", level);
                         file.Write(format, args);
                         file.Flush();
                     }

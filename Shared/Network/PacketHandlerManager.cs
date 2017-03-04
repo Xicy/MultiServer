@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Shared.Network
 {
-    public class PacketHandlerManager<TClient> where TClient : BaseClient<TClient>
+    public class PacketHandlerManager<TClient> where TClient : BaseClient //TODO:abstract
     {
         public delegate void PacketHandlerFunc(TClient client, Packet packet);
 
@@ -47,7 +47,7 @@ namespace Shared.Network
 
         public virtual void UnknownPacket(TClient client, Packet packet)
         {
-            Log.Unimplemented(Localization.Get("Shared.Network.PacketHandlerManager.UnknownPacket.UnImplemented"), packet.OpCode.ToString("X4"), OpCodes.GetName(packet.OpCode));
+            Log.Unimplemented(Localization.Get("Shared.Network.PacketHandlerManager.UnknownPacket.UnImplemented"), packet.OpCode, OpCodes.GetName(packet.OpCode));
             Log.Debug(packet);
             packet.Dispose();
         }
