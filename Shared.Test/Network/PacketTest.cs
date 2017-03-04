@@ -26,10 +26,10 @@ namespace Shared.Test.Network
         [TestInitialize]
         public void Packet_Build()
         {
-            pack = new Packet(ushort.MaxValue, long.MaxValue)
+            pack = new Packet(1, 0)
                 .Write()
                 .Write((byte)1)
-                .Write(unchecked((byte)-1))
+                .Write((sbyte)-1)
 
                 .Write(true)
                 .Write(false)
@@ -66,12 +66,12 @@ namespace Shared.Test.Network
         public void Packet_Read()
         {
             var pck = new Packet(pack, 0);
-            Assert.AreEqual(pck.OpCode, ushort.MaxValue, "OpCode Test");
-            Assert.AreEqual(pck.Id, long.MaxValue, "ID Test");
+            Assert.AreEqual(pck.OpCode, 1, "OpCode Test");
+            Assert.AreEqual(pck.Id, 0, "ID Test");
 
             Assert.AreEqual(pck.GetByte(), (byte)0, "Zero Byte Test");
             Assert.AreEqual(pck.GetByte(), (byte)1, "Byte Test");
-            Assert.AreEqual((sbyte)pck.GetByte(), (sbyte)-1, "SByte Test");
+            Assert.AreEqual(pck.GetSByte(), (sbyte)-1, "SByte Test");
 
             Assert.AreEqual(pck.GetBool(), true, "Bool Test");
             Assert.AreEqual(pck.GetBool(), false, "Bool Test");
@@ -92,7 +92,8 @@ namespace Shared.Test.Network
 
             Assert.AreEqual(pck.GetDouble(), 1D, "Double Test");
             Assert.AreEqual(pck.GetDouble(), -1D, "Double Test");
-            
+
+
             Assert.AreEqual(pck.GetString(), "Test", "String Test");
             Assert.AreEqual(pck.GetChar(), 'C', "Char Test");
             Assert.AreEqual(pck.GetString(), "format test", "Formated String Test");
