@@ -1,5 +1,5 @@
-﻿using Shared.Network;
-using System;
+﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -7,57 +7,139 @@ namespace Shared.Util
 {
     public static class PacketConverter
     {
-        internal static byte ToByte(byte[] buffer, int position) => buffer[position];
-        internal static sbyte ToSByte(byte[] buffer, int position) => (sbyte)ToByte(buffer, position);
-        internal static bool ToBoolean(byte[] buffer, int position) => BitConverter.ToBoolean(buffer, position);
-        internal static short ToInt16(byte[] buffer, int position) => BitConverter.ToInt16(buffer, position);
-        internal static ushort ToUInt16(byte[] buffer, int position) => BitConverter.ToUInt16(buffer, position);
-        internal static char ToChar(byte[] buffer, int position) => BitConverter.ToChar(buffer, position);
-        internal static int ToInt32(byte[] buffer, int position) => BitConverter.ToInt32(buffer, position);
-        internal static uint ToUInt32(byte[] buffer, int position) => BitConverter.ToUInt32(buffer, position);
-        internal static float ToSingle(byte[] buffer, int position) => BitConverter.ToSingle(buffer, position);
-        internal static long ToInt64(byte[] buffer, int position) => BitConverter.ToInt64(buffer, position);
-        internal static ulong ToUInt64(byte[] buffer, int position) => BitConverter.ToUInt64(buffer, position);
-        internal static double ToDouble(byte[] buffer, int position) => BitConverter.ToDouble(buffer, position);
+        private static readonly Type Bct = typeof(BitConverter);
+        private static readonly Encoding Encoding = Encoding.UTF8;
 
-        public static decimal ToDecimal(byte[] buffer, int position)
+        public delegate T PacketConverterEvent<out T>(ref byte[] buffer, ref int position, bool skipPosition);
+        public delegate T PacketConverterWithLenghtEvent<out T>(ref byte[] buffer, ref int position, int length, bool skipPosition);
+
+        internal static T ToObjectWithLenght<T>(ref byte[] buffer, ref int position, int length, bool skipPosition)
         {
-            var bits = new int[4];
-            for (var i = 0; i <= 15; i += 4)
+            var type = typeof(T);
+            if (type.IsEnum)
+                type = Enum.GetUnderlyingType(type);
+
+            object ret;
+
+            if (length == 0)
             {
-                bits[i / 4] = BitConverter.ToInt32(buffer, position + i);
+                length = Marshal.SizeOf(type);
+                if (type == typeof(bool)) length = 1;
+                else if (type == typeof(char)) length = 2;
             }
-            return new decimal(bits);
+            if (length <= 0) throw new ArgumentOutOfRangeException(nameof(length));
+            if (position + length > buffer.Length) throw new IndexOutOfRangeException(Localization.Get("Shared.Network.Packet.IsReadable.Exception"));
+
+            if (!type.IsArray)
+            {
+                if (type == typeof(byte))
+                {
+                    ret = buffer[position];
+                }
+                else if (type == typeof(decimal))
+                {
+                    var bits = new int[4];
+                    for (var i = 0; i <= 15; i += 4)
+                    {
+                        bits[i / 4] = BitConverter.ToInt32(buffer, position + i);
+                    }
+                    ret = new decimal(bits);
+                }
+                else if (type == typeof(string))
+                {
+                    ret = Encoding.GetString(buffer, position, length);
+                }
+                else if (type.IsPrimitive)
+                {
+                    var miGetBytes = Bct.GetMethod("To" + type.Name);
+                    if (miGetBytes == null)
+                        throw new InvalidOperationException("Method: GetBytes on BitConverter does not have an overload accepting one paramter of type: " + type.FullName);
+                    ret = miGetBytes.Invoke(null, new object[] { buffer, position });
+                }
+                else
+                {
+                    var intPtr = IntPtr.Zero;
+                    try
+                    {
+                        intPtr = Marshal.AllocHGlobal(length);
+                        Marshal.Copy(buffer, position, intPtr, length);
+                        ret = Marshal.PtrToStructure(intPtr, typeof(T));
+                    }
+                    finally
+                    {
+                        if (intPtr != IntPtr.Zero)
+                            Marshal.FreeHGlobal(intPtr);
+                    }
+                }
+            }
+            else if (type.GetElementType() == typeof(byte))
+            {
+                ret = new byte[length];
+                Buffer.BlockCopy(buffer, position, (byte[])ret, 0, length);
+            }
+            else throw new InvalidDataException("Data not resolved.");
+
+            if (skipPosition) position += length;
+            return (T)ret;
+        }
+        internal static T ToObject<T>(ref byte[] buffer, ref int position, bool skipPosition)
+        {
+            return ToObjectWithLenght<T>(ref buffer, ref position, 0, skipPosition);
+        }
+        internal static void ToObject<T>(out T ret, byte[] buffer, ref int position, bool skipPosition)
+        {
+            ret = ToObjectWithLenght<T>(ref buffer, ref position, 0, skipPosition);
         }
 
-        internal static string ToString(byte[] buffer, int position, int length) => Encoding.UTF8.GetString(buffer, position, length);
-        internal static byte[] ToBin(byte[] buffer, int position, int length) { var val = new byte[length]; Array.Copy(buffer, position, val, 0, length); return val; }
+        internal static long DoubleToInt64Bits(double value) => BitConverter.DoubleToInt64Bits(value);
+        internal static string ToStringBinary(byte[] value) => BitConverter.ToString(value);
 
-        internal static T ToObject<T>(byte[] buffer, int position, int length)
-        {
-            object val;
-            var intPtr = IntPtr.Zero;
-            try
-            {
-                intPtr = Marshal.AllocHGlobal(length);
-                Marshal.Copy(buffer, position, intPtr, length);
-                val = Marshal.PtrToStructure(intPtr, typeof(T));
-            }
-            finally
-            {
-                if (intPtr != IntPtr.Zero)
-                    Marshal.FreeHGlobal(intPtr);
-            }
-            return (T)val;
-        }
 
-        public static byte[] GetBytes(decimal dec)
+        internal static byte[] GetBytes(object obj)
         {
-            var bits = decimal.GetBits(dec);
-            var bytes = new byte[16];
-            for (var i = 0; i < 4; i++)
-                BitConverter.GetBytes(bits[i]).CopyTo(bytes, i * 4);
-            return bytes;
+            var type = obj.GetType();
+            if (type.IsEnum)
+                type = Enum.GetUnderlyingType(type);
+
+            byte[] bytesRet;
+            if (type == typeof(byte)) bytesRet = new[] { (byte)obj };
+            else if (type == typeof(decimal))
+            {
+                var bits = decimal.GetBits((decimal)obj);
+                bytesRet = new byte[16];
+                for (var i = 0; i < 4; i++)
+                    BitConverter.GetBytes(bits[i]).CopyTo(bytesRet, i * 4);
+            }
+            else if (type == typeof(string)) bytesRet = Encoding.GetBytes((string)obj);
+            else if (type.IsPrimitive)
+            {
+                var miGetBytes = Bct.GetMethod("GetBytes", new[] { type });
+                if (miGetBytes == null)
+                    throw new InvalidOperationException(
+                        "Method: GetBytes on BitConverter does not have an overload accepting one paramter of type: " +
+                        type.FullName);
+                bytesRet = (byte[])miGetBytes.Invoke(null, new object[] { obj });
+            }
+            else
+            {
+                var size = Marshal.SizeOf(obj);
+                var ptr = IntPtr.Zero;
+                bytesRet = new byte[size];
+
+                try
+                {
+                    ptr = Marshal.AllocHGlobal(size);
+                    Marshal.StructureToPtr(obj, ptr, true);
+                    Marshal.Copy(ptr, bytesRet, 0, size);
+                }
+                finally
+                {
+                    if (ptr != IntPtr.Zero)
+                        Marshal.FreeHGlobal(ptr);
+                }
+            }
+
+            return bytesRet;
         }
 
     }
