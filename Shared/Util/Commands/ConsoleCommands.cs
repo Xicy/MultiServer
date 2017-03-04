@@ -59,7 +59,7 @@ namespace Shared.Util.Commands
         protected CommandResult HandleDebug(string command, IList<string> args)
         {
             Log.Hide ^= LogLevel.Debug;
-            Log.Info(Localization.Get("Shared.Util.Commands.ConsoleCommands.HandleDebug.Info"), ((Log.Hide & LogLevel.Debug) != 0 ? Localization.Get("False") : Localization.Get("True")));
+            Log.Info(Localization.Get("Shared.Util.Commands.ConsoleCommands.HandleDebug.Info"), (Log.Hide & LogLevel.Debug) != 0 ? Localization.Get("Shared.Util.Commands.ConsoleCommands.HandleDebug.False") : Localization.Get("Shared.Util.Commands.ConsoleCommands.HandleDebug.True"));
             return CommandResult.Okay;
         }
         protected CommandResult HandleCleanScreen(string command, IList<string> args)
