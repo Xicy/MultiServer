@@ -3,21 +3,17 @@ using System.Net;
 using Shared.Util;
 using System.Net.Sockets;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 
 namespace Shared.Network
 {
-    public abstract class BaseServer<TClient> where TClient : BaseClient<TClient>, new()
+    public abstract class BaseServer<TClient> where TClient : BaseClient, new()
     {
-        #region Fields
-        private bool _status;
-        private Socket _socketListen;
-        private string _address;
-        public string Address { get { if (_address != null) return _address; try { _address = _socketListen.LocalEndPoint.ToString(); } catch { _address = Localization.Get("Shared.Network.BaseServer.Address.Null"); } return _address; } }
-        private readonly ReaderWriterLockSlim _rwLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        public List<TClient> Clients { get; }
-        #endregion
+        //TODO:Localizaion
+        private readonly Socket _socketListen;
+        private readonly ReaderWriterLockSlim _listLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        public List<TClient> Clients { protected set; get; }
+        public PacketHandlerManager<TClient> Handlers { set; get; }
 
         #region Events
         public delegate void ClientConnectionEventHandler(TClient client);
@@ -39,6 +35,7 @@ namespace Shared.Network
 
         protected BaseServer()
         {
+            _socketListen = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             Clients = new List<TClient>();
         }
 
@@ -52,54 +49,65 @@ namespace Shared.Network
         }
         public void Start(IPEndPoint localEp)
         {
-            if (_status)
+            try
             {
-                Log.Warning(Localization.Get("Shared.Network.BaseServer.Start.AlreadyConnected"));
-            }
-            else try
-                {
+                if (Handlers == null)
+                    Log.Error(Localization.Get("Shared.Network.BaseServer.Start.HandlersNull"));
 
-                    _socketListen = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
-                    _socketListen.Bind(localEp);
-                    _socketListen.Listen(200);
-                    _address = _socketListen.LocalEndPoint.ToString();
-                    _socketListen.BeginAccept(OnAccept, _socketListen);
-                    _status = true;
-                }
-                catch (Exception ex) { Log.Exception(ex, Localization.Get("Shared.Network.BaseServer.Start.Exception")); }
-                finally { if (_status) Log.Status(Localization.Get("Shared.Network.BaseServer.Start.ServerReady"), Address); }
+                _socketListen.Bind(localEp);
+                _socketListen.Listen(200);
+                _socketListen.BeginAccept(OnAccept, _socketListen);
+                Log.Status(Localization.Get("Shared.Network.BaseServer.Start.ServerReady"), _socketListen.LocalEndPoint);
+            }
+            catch (Exception ex) { Log.Exception(ex, Localization.Get("Shared.Network.BaseServer.Start.Exception")); }
         }
         public void Stop()
         {
-            _status = false;
+            using (_listLock.Read())
+                Clients.ForEach(client => RemoveClient(client));
+
+            _socketListen.Shutdown(SocketShutdown.Both);
             _socketListen.Close();
-            using (_rwLock.Write())
-                Clients.ToList().ForEach(client => RemoveClient(client));
-            Log.Status(Localization.Get("Shared.Network.BaseServer.Start.ServerStop"), Address);
+            /*
+            try
+            {
+                _listLock.EnterReadLock();
+                try
+                {
+                    Clients.ForEach(client => RemoveClient(client));
+                }
+                finally { _listLock.ExitReadLock(); }
+
+                _socketListen.Shutdown(SocketShutdown.Both);
+                _socketListen.Close();
+            }
+            catch
+            {
+                // ignored
+            }
+            */
         }
 
         private void OnAccept(IAsyncResult result)
         {
             var client = new TClient();
-            client.Disconnected += c => { RemoveClient(client); };
-            client.HandleBuffer += (c, b) => { HandleBuffer(client, b); };
-            try { client.OnReceive(((Socket)result.AsyncState).EndAccept(result)); }
+            try
+            {
+                client.Disconnected += c => { RemoveClient(client); };
+                client.HandleBuffer += (c, b) => { HandleBuffer(client, b); };
+                client.OnReceive(((Socket)result.AsyncState).EndAccept(result));
+
+                AddClient(client);
+                Log.Debug(Localization.Get("Shared.Network.BaseServer.OnAccept.ConnectionEstablished"), client.Address);
+            }
             catch (ObjectDisposedException) { }
             catch (Exception ex) { Log.Exception(ex, Localization.Get("Shared.Network.BaseServer.OnAccept.Exception")); }
-            finally
-            {
-                if (_status)
-                {
-                    AddClient(client);
-                    Log.Debug(Localization.Get("Shared.Network.BaseServer.OnAccept.ConnectionEstablished"), client.Address);
-                    _socketListen.BeginAccept(OnAccept, _socketListen);
-                }
-            }
+            finally { _socketListen.BeginAccept(OnAccept, _socketListen); }
         }
 
         protected void AddClient(TClient client)
         {
-            using (_rwLock.Write())
+            using (_listLock.Write())
             {
                 Clients.Add(client);
                 OnClientConnected(client);
@@ -107,7 +115,7 @@ namespace Shared.Network
         }
         protected void RemoveClient(TClient client, bool kill = true)
         {
-            using (_rwLock.Write())
+            using (_listLock.Write())
             {
                 Clients.Remove(client);
                 OnClientDisconnected(client);
