@@ -1,31 +1,48 @@
 ﻿using System;
-using Shared;
 using System.Linq;
+using Shared;
 using Shared.Util;
 using Shared.Network;
 using Shared.Schema;
+using Shared.Security;
 
 namespace Server
 {
     public class PacketHandler : PacketHandlerManager<GameClient>
     {
-        public PacketHandler()
+        private readonly GameServer _server;
+        public PacketHandler(GameServer server)
         {
+            _server = server;
             AutoLoad();
         }
 
         [PacketHandler(OpCodes.Crypter)]
         public void Crypter(GameClient client, Packet packet)
         {
-            Log.Debug("Crypter is {1} from {0},{2}", client.Address, packet.GetBool(), client.ID);
+            var crypterStatus = packet.GetBool();
+            if (!crypterStatus)
+            {
+                client.Crypter(URandom.Long());
+                byte x = (byte)URandom.Int(40), y = (byte)URandom.Int(20);
+
+                client.X = x;
+                client.Y = y;
+            }
+            Log.Debug("Crypter is {1} from {0},{2}", client.Address, crypterStatus, client.ID);
         }
 
         [PacketHandler(OpCodes.Ping)]
         public void Ping(GameClient client, Packet packet)
         {
             client.LastPingTime = new DateTime(packet.GetLong());
-            //Log.Debug("Request Ping From {0},{2},{1}", client.Address, client.LastPingTime, client.ID);
             client.Ping();
+        }
+
+        [PacketHandler(OpCodes.GetAroundPlayers)]
+        public void GetAroundPlayers(GameClient client, Packet packet)
+        {
+            _server.Clients.ToList().ForEach(c => { client.Move(c); c.Move(client); });
         }
 
         [PacketHandler(OpCodes.MoveObject)]
@@ -45,12 +62,12 @@ namespace Server
                     x++; break;
             }
 
-            if (x > 0 && x < 40)
+            if (x < 40)
                 client.X = x;
-            if (y > 0 && y < 20)
+            if (y < 20)
                 client.Y = y;
 
-            Program.Server.Clients.ForEach(c => c.Move(client));
+            _server.Clients.ForEach(c => c.Move(client));
         }
 
     }

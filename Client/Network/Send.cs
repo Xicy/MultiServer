@@ -7,9 +7,12 @@ namespace Client
 {
     public static class Send
     {
-        public static void Crypter(this GameClient client)
+        public static void Crypter(this GameClient client, string key)
         {
-            client.Send(new Packet(OpCodes.Crypter, client.ID).Write(true));
+            var isDone = !string.IsNullOrEmpty(key);
+            var pck = new Packet(OpCodes.Crypter, client.ID).Write(isDone);
+            if (isDone) pck.Write(key);
+            client.Send(pck);
         }
         public static void Ping(this GameClient client)
         {
@@ -19,5 +22,6 @@ namespace Client
         {
             client.Send(new Packet(OpCodes.MoveObject, client.ID).Write((byte)dir));
         }
+        public static void GetAroundPlayers(this GameClient client) => client.Send(new Packet(OpCodes.GetAroundPlayers, client.ID));
     }
 }

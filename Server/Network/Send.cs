@@ -10,10 +10,9 @@ namespace Server
     {
         public static void Crypter(this GameClient client, long clientID)
         {
-            string key = URandom.String(32, URandom.PattenUpper + URandom.PattenInt);
+            //string key = URandom.String(32, URandom.PattenUpper + URandom.PattenInt);
             client.ID = clientID;
-            client.Send(new Packet(OpCodes.Crypter, OpCodes.ServerID).Write(clientID).Write(key));
-            client.Crypter = new Shared.Security.Blowfish(key);
+            client.Send(new Packet(OpCodes.Crypter, OpCodes.ServerID).Write(clientID));
         }
         public static void Ping(this GameClient client)
         {

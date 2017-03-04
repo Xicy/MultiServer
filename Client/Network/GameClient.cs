@@ -4,7 +4,7 @@ using Shared.Schema;
 
 namespace Client
 {
-    public class GameClient : BaseClient
+    public class GameClient : BaseClient<GameClient>
     {
         public PacketHandler Handlers;
         public DateTime LastPingTime { set; get; }
@@ -17,15 +17,21 @@ namespace Client
             return new GameObject(client.ID, client.X, client.Y);
         }
 
-        protected override void OnDisconnected(BaseClient client)
+        public void Send(Packet packet)
         {
-            Handlers.GameObjects.Clear();
+            Send(packet.Build());
+        }
+
+        protected override void OnHandleBuffer(GameClient client, byte[] buffer)
+        {
+            Handlers.Handle(client, new Packet(buffer, 0));
         }
 
         public GameClient()
         {
             Handlers = new PacketHandler();
-            HandleBuffer += (c, b) => Handlers.Handle((GameClient)c, new Packet(b, 0));
+            Disconnected += c => Handlers.GameObjects.Clear();
+            Connected += c => { c.Ping(); c.Crypter(""); };
         }
     }
 }

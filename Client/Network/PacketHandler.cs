@@ -11,7 +11,7 @@ namespace Client
 {
     public class PacketHandler : PacketHandlerManager<GameClient>
     {
-        public Dictionary<long, GameObject> GameObjects;
+        public readonly Dictionary<long, GameObject> GameObjects;
 
         public PacketHandler()
         {
@@ -23,14 +23,7 @@ namespace Client
         public void MoveObject(GameClient client, Packet packet)
         {
             var go = packet.GetObj<GameObject>();
-            if (GameObjects.ContainsKey(go.ID))
-            {
-                GameObjects[go.ID] = go;
-            }
-            else
-            {
-                GameObjects.Add(go.ID, go);
-            }
+            GameObjects[go.ID] = go;
         }
 
         [PacketHandler(OpCodes.Crypter)]
@@ -38,31 +31,26 @@ namespace Client
         {
             client.ID = packet.GetLong();
             GameObjects.Add(client.ID, client);
-            string key = packet.GetString();
-            client.Crypter = new Shared.Security.Blowfish(key);
-            Log.Debug("Crypter changed new key: {0}", key);
-            client.Crypter();
+            client.GetAroundPlayers();
         }
 
         [PacketHandler(OpCodes.Ping)]
         public void Ping(GameClient client, Packet packet)
         {
-            client.LastPingTime = new DateTime(packet.GetLong());
-            Task.Delay(1000 / 30).ContinueWith(task => client.Ping());
+            var cur = new DateTime(packet.GetLong());
+            Task.Delay(30).ContinueWith(task => client.Ping());
 
             Console.Clear();
+            Console.Write(" Ping:{0}", (cur - client.LastPingTime).TotalMilliseconds);
+            client.LastPingTime = cur;
+
             foreach (var cell in GameObjects.Values.ToArray())
-            {
-                Console.MoveBufferArea(cell.X, cell.Y, 1, 1, 0, 0, '@', cell.ID == client.ID ? ConsoleColor.Red : ConsoleColor.Green, ConsoleColor.Black);
-            }
+               Console.MoveBufferArea(cell.X, cell.Y, 1, 1, 0, 0, '@', cell.ID == client.ID ? ConsoleColor.Red : ConsoleColor.Green, ConsoleColor.Black);
+
         }
 
         [PacketHandler(999)]
-        public void RemoveObject(GameClient client, Packet packet)
-        {
-            var go = packet.GetObj<GameObject>();
-            GameObjects.Remove(go.ID);
-        }
+        public void RemoveObject(GameClient client, Packet packet) => GameObjects.Remove(packet.GetObj<GameObject>().ID);
 
     }
 }

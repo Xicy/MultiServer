@@ -7,20 +7,34 @@ namespace Server
 {
     class Program
     {
-        public static GameServer Server;
+        private static GameServer Server;
         public static void Main(string[] args)
         {
+            //Log.Hide = (LogLevel)byte.MaxValue;//HACK:Hide for all logs
             CliUtil.LoadingTitle();
             CliUtil.WriteHeader(Localization.Get("Server.Program.Main.Title"), ConsoleColor.Red);
-            
+
             var console = new ConsoleCommands();
             console.Add("status", "<GCollet:Bool>", Localization.Get("Server.Program.Main.ConsoleCommands.Description.Status"), HandleStatus);
-
+            console.Add("stop", "Stop the server", HandleStop);
+            console.Add("start", "Start the server", HandleStart);
             Server = new GameServer();
             Server.Start(8080);
 
             CliUtil.RunningTitle();
             console.Wait();
+        }
+
+        private static CommandResult HandleStart(string command, IList<string> args)
+        {
+            Server.Start(8080);
+            return CommandResult.Okay;
+        }
+
+        private static CommandResult HandleStop(string command, IList<string> args)
+        {
+            Server.Stop();
+            return CommandResult.Okay;
         }
 
         private static CommandResult HandleStatus(string command, IList<string> args)
