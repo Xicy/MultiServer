@@ -1,8 +1,15 @@
 ﻿//NameSpace.Class.Method.Function.FunctionSection.FunctionName
 Shared.Util.CLIUtil.WriteHeader.Header	 ,ggg,          ,gg                           \ndP"""Y8,      ,dP'                            \nYb,_  "8b,   d8"                              \n `""    Y8,,8P'      gg                       \n         Y88"        ""                       \n        ,888b        gg     ,gggg,  gg     gg \n       d8" "8b,      88    dP"  "Yb I8     8I \n     ,8P'    Y8,     88   i8'       I8,   ,8I \n    d8"       "Yb, _,88,_,d8,_    _,d8b, ,d8I \n  ,8P'          "Y88P""Y8P""Y8888PPP""Y88P"888\n                                         ,d8I'\n                                       ,dP'8I \n                                      ,8"  8I \n                                      I8   8I \n                                      `8, ,8I \n                                       `Y8P"    
 
-True	True
-False	False
+Shared.Util.Commands.ConsoleCommands.HandleDebug.True	True
+Shared.Util.Commands.ConsoleCommands.HandleDebug.False	False
+Shared.Util.LogLevel.Info	Info
+Shared.Util.LogLevel.Warning	Warning
+Shared.Util.LogLevel.Error	Error
+Shared.Util.LogLevel.Debug	Debug
+Shared.Util.LogLevel.Status	Status
+Shared.Util.LogLevel.Exception	Exception
+Shared.Util.LogLevel.Unimplemented	Unimplemented
 Shared.Util.Log.Exception.Description	See log file for more details.
 Shared.Util.FileReader.FileReader.FileNotFoundException	File '{0}' not found.
 Shared.Util.FileReader.GetEnumerator.FileNotFoundException	Required file '{0}' not found.
@@ -30,7 +37,7 @@ Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Code	Name: {0} |Usage: {1}|
 Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Null	<NULL>
 Shared.Util.Commands.ConsoleCommands.HandleStatus.Status	Memory Usage: {0:N0} KB
 Shared.Util.Commands.CommandManager.Command.InvalidOperationException	{0} is not a delegate type
-Shared.Network.PacketHandlerManager.UnknownPacket.UnImplemented	PacketHandlerManager: Handler for '{0:X4}', '{1}'.
+Shared.Network.PacketHandlerManager.UnknownPacket.UnImplemented	PacketHandlerManager: Handler for '{0}', '{1}'.
 Shared.Network.Packet.IsReadable.Exception	Buffer doesn't have enough bytes left.
 Shared.Network.Packet.Build.Exception	Buffer too small for packet, use GetSize().
 Shared.Network.Packet.Write.Exception	Write object only takes byte[] and structs.
@@ -51,12 +58,22 @@ Shared.Network.Packet.GetObj.Exception	GetObj can only marshal to structs.
 Shared.Network.Packet.GetPacket.Exception	Expected Packet, got {0}.
 Shared.Network.BaseServer.Start.HandlersNull	No packet handler manager set.
 Shared.Network.BaseServer.Start.ServerReady	Server ready, listening on {0}.
+Shared.Network.BaseServer.Start.ServerStop	Server stoped on {0}.
 Shared.Network.BaseServer.Start.Exception	Unable to set up socket; perhaps you're already running a server?
+Shared.Network.BaseServer.Start.AlreadyConnected	Server already listening!
 Shared.Network.BaseServer.OnAccept.ConnectionEstablished	Connection established from '{0}.
 Shared.Network.BaseServer.OnAccept.Exception	While accepting connection.
+Shared.Network.BaseServer.Address.Null	<NULL>
 Shared.Network.BaseClient.Address.Null	<NULL>
-
-Shared.Network.BaseClient.Send.SocketException	Connection lost from '{0}'.
-
+Shared.Network.BaseClient.Send.SocketException	Connection lost from {0}.
+Shared.Network.BaseClient.Send.Exception	Unable to send data to {0}. ({1})
+Shared.Network.BaseClient.Connect.Ready	Client ready, listening on {0}.
+Shared.Network.BaseClient.Connect.AlreadyConnected	Client already connected!
+Shared.Network.BaseClient.OnReceive.Closed	Connection closed from '{0}.
+Shared.Network.BaseClient.OnReceive.Disconnected	Disconnected connection from {0}.
+Shared.Network.BaseClient.OnReceive.SocketException	Connection lost from {0}.
+Shared.Network.BaseClient.OnReceive.ObjectDisposedException	Socket disposed {0}.
+Shared.Network.BaseClient.OnReceive.Exception	While receiving data from {0}.	
+Shared.Network.BaseClient.Disconnect.AlreadyDisconnected	Client got disconnected multiple times.
 Shared.OpCodes.GetName.Null	<NULL>
 Shared.Security.Blowfish.InvalidLength	Invalid Length

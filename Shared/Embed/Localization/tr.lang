@@ -1,59 +1,79 @@
 ﻿//NameSpace.Class.Method.Function.FunctionSection.FunctionName
 
 
-True	Doğru
-False	Yanlış
+Shared.Util.Commands.ConsoleCommands.HandleDebug.True	kapalı
+Shared.Util.Commands.ConsoleCommands.HandleDebug.False	açık
+Shared.Util.LogLevel.Info	Bilgi
+Shared.Util.LogLevel.Warning	Uyarı
+Shared.Util.LogLevel.Error	Hata
+Shared.Util.LogLevel.Debug	Hata Ayıklama
+Shared.Util.LogLevel.Status	Durum
+Shared.Util.LogLevel.Exception	Sıradışı Durum	
+Shared.Util.LogLevel.Unimplemented	Uygulanamayan
 Shared.Util.Log.Exception.Description	Daha fazla bilgi için günlük dosyasına bakın.
 Shared.Util.FileReader.FileReader.FileNotFoundException	Dosya '{0}' bulunamadı.
 Shared.Util.FileReader.GetEnumerator.FileNotFoundException	Gerekli dosya '{0}' bulunamadı.
 Shared.Util.CLIUtil.Exit.PressEnter	Çıkmak için Enter.
-Shared.Util.CLIUtil.Exit.Exiting	Çıkılıyor...
-Shared.Util.Commands.ConsoleCommands.Help	help
-Shared.Util.Commands.ConsoleCommands.Cls	cls
-Shared.Util.Commands.ConsoleCommands.Exit	exit
-Shared.Util.Commands.ConsoleCommands.Status	status
-Shared.Util.Commands.ConsoleCommands.Debug	debug
+//Shared.Util.CLIUtil.Exit.Exiting	Çıkılıyor...
+//Shared.Util.Commands.ConsoleCommands.Help	help
+//Shared.Util.Commands.ConsoleCommands.Cls	cls
+//Shared.Util.Commands.ConsoleCommands.Exit	exit
+//Shared.Util.Commands.ConsoleCommands.Status	status
+//Shared.Util.Commands.ConsoleCommands.Debug	debug
 Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.Help	Bu yardımı veya komut yardımını görüntüler
 Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Usage.Help	<Komut ismi>
 Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.CLS	Ekranı temizle
 Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.Exit	Uygulamayı kapat
 Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.Status	Uygulama durumunu görüntüler
-Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.Debug	Debug görünürlüğünü değiştir
+Shared.Util.Commands.ConsoleCommands.ConsoleCommands.Description.Debug	Hata ayıklama görünürlüğünü değiştir
 Shared.Util.Commands.ConsoleCommands.Wait.Help	Konsol komutların listesi için 'help' yazın.
 Shared.Util.Commands.ConsoleCommands.Wait.Info.Unknown	Bilinmeyen komut '{0}'
 Shared.Util.Commands.ConsoleCommands.Wait.Error.Fail	Komut çalıştırmak için başarısız '{0}'.
 Shared.Util.Commands.ConsoleCommands.Wait.Info.Usage	Kullanımı :{0} {1}
-Shared.Util.Commands.ConsoleCommands.HandleDebug.Info	Debug şuan {0}.
+Shared.Util.Commands.ConsoleCommands.HandleDebug.Info	Hata ayıklama şuan {0}.
 Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Available	Mevcut komutlar
 Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Unknown	Bilinmeyen komut '{0}'
 Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Code	İsim: {0} | Kullanımı: {1} | Açıklama: {2}
 Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Null	<BOŞ>
 Shared.Util.Commands.ConsoleCommands.HandleStatus.Status	Bellek Kullanımı: {0:N0} KB
 Shared.Util.Commands.CommandManager.Command.InvalidOperationException	{0} delegate tipinde değil
-Shared.Network.PacketHandlerManager.UnknownPacket.UnImplemented	PacketHandlerManager: Handler for '{0:X4}', '{1}'.
+//Shared.Network.PacketHandlerManager.UnknownPacket.UnImplemented	PacketHandlerManager: Handler for '{0:X4}', '{1}'.
 Shared.Network.Packet.IsReadable.Exception	Buffer gerekli uzunlukta değil
 Shared.Network.Packet.Build.Exception	Buffer packet için çok kısa, GetSize()'ı kullanın.
 Shared.Network.Packet.Write.Exception	Write fonksiyonu sadece byte[] ve struct kullanır
-Shared.Network.Packet.GetByte.Exception	Expected Byte, got {0}.
-Shared.Network.Packet.GetSByte.Exception	Expected SByte, got {0}.
-Shared.Network.Packet.GetBool.Exception	Expected Bool, got {0}.
-Shared.Network.Packet.GetShort.Exception	Expected Short, got {0}.
-Shared.Network.Packet.GetUShort.Exception	Expected UShort, got {0}.
-Shared.Network.Packet.GetInt.Exception	Expected Int, got {0}.
-Shared.Network.Packet.GetUInt.Exception	Expected UInt, got {0}.
-Shared.Network.Packet.GetLong.Exception	Expected Long, got {0}.
-Shared.Network.Packet.GetULong.Exception	Expected ULong, got {0}.
-Shared.Network.Packet.GetDateTime.Exception	Expected DateTime, got {0}.
-Shared.Network.Packet.GetFloat.Exception	Expected Float, got {0}.
-Shared.Network.Packet.GetString.Exception	Expected String, got {0}.
-Shared.Network.Packet.GetBin.Exception	Expected Bin, got {0}.
-Shared.Network.Packet.GetObj.Exception	GetObj can only marshal to structs.
-Shared.Network.Packet.GetPacket.Exception	Expected Packet, got {0}.
+//Shared.Network.Packet.GetByte.Exception	Expected Byte, got {0}.
+//Shared.Network.Packet.GetSByte.Exception	Expected SByte, got {0}.
+//Shared.Network.Packet.GetBool.Exception	Expected Bool, got {0}.
+//Shared.Network.Packet.GetShort.Exception	Expected Short, got {0}.
+//Shared.Network.Packet.GetUShort.Exception	Expected UShort, got {0}.
+//Shared.Network.Packet.GetInt.Exception	Expected Int, got {0}.
+//Shared.Network.Packet.GetUInt.Exception	Expected UInt, got {0}.
+//Shared.Network.Packet.GetLong.Exception	Expected Long, got {0}.
+//Shared.Network.Packet.GetULong.Exception	Expected ULong, got {0}.
+//Shared.Network.Packet.GetDateTime.Exception	Expected DateTime, got {0}.
+//Shared.Network.Packet.GetFloat.Exception	Expected Float, got {0}.
+//Shared.Network.Packet.GetString.Exception	Expected String, got {0}.
+//Shared.Network.Packet.GetBin.Exception	Expected Bin, got {0}.
+//Shared.Network.Packet.GetObj.Exception	GetObj can only marshal to structs.
+//Shared.Network.Packet.GetPacket.Exception	Expected Packet, got {0}.
 Shared.Network.BaseServer.Start.HandlersNull	Paket Yöneticisi Ayarlanmamış.
 Shared.Network.BaseServer.Start.ServerReady	Sunucu hazır, {0} üzerinde çalışıyor.
+Shared.Network.BaseServer.Start.ServerStop	{0} üzerindeki sunucu durduruldu.
 Shared.Network.BaseServer.Start.Exception	Soket ayarlanamıyor. Büyükihtimalle sunucu çalışıyor.
+Shared.Network.BaseServer.Start.AlreadyConnected	Sunucu zaten çalışıyor!
 Shared.Network.BaseServer.OnAccept.ConnectionEstablished	{0} tarafından bağlantı kuruldu.
 Shared.Network.BaseServer.OnAccept.Exception	Bağlantı kabul edilirken.
+Shared.Network.BaseServer.Address.Null <BOŞ>
 Shared.Network.BaseClient.Address.Null <BOŞ>
+Shared.Network.BaseClient.Send.SocketException	{0} Bağlantısı kaybedildi.
+Shared.Network.BaseClient.Send.Exception	{0} adresine veri yollanamadı. ({1})
+Shared.Network.BaseClient.Connect.Ready	İstemci hazır, {0} üzerinde çalışıyor.
+Shared.Network.BaseClient.Connect.AlreadyConnected	İstemci zaten bağlı!
+Shared.Network.BaseClient.OnReceive.Closed	Bağlantı {0} tarafından kapatıldı.
+Shared.Network.BaseClient.OnReceive.Disconnected	Bağlantı {0} tarafından kapatıldı.
+Shared.Network.BaseClient.OnReceive.SocketException	{0} bağlantısı kaybedildi.
+Shared.Network.BaseClient.OnReceive.ObjectDisposedException	Soket boş '{0}'.
+Shared.Network.BaseClient.OnReceive.Exception	{0} dan veri gelirken hata oluştu.	
+Shared.Network.BaseClient.Disconnect.AlreadyDisconnected	İstemci birden fazla defa kapatıldı.
 Shared.OpCodes.GetName.Null <BOŞ>
 Shared.Security.Blowfish.InvalidLength	Geçersiz Uzunluk
