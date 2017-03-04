@@ -4,7 +4,6 @@ using Shared.Util;
 using System.Threading;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Shared.Network
 {
@@ -12,7 +11,6 @@ namespace Shared.Network
     {
         None,
         Byte,
-        SByte,
         Short,
         UShort,
         Int,
@@ -32,19 +30,29 @@ namespace Shared.Network
     {
         private const ushort DefaultBufferSize = 1024;
         private const ushort AddSize = 512;
-        private readonly ReaderWriterLockSlim _readWriteLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim _rwLock = new ReaderWriterLockSlim();
         protected byte[] Buffer;
         protected int Position;
         protected int BodyStart;
         private int _elements;
         private int _bodyLength;
+        private ushort _opCode;
+        private long _id;
 
-        public ushort OpCode { set; get; }
-        public long Id { set; get; }
+        public ushort OpCode
+        {
+            set { _opCode = value; }
+            get { return _opCode; }
+        }
+        public long Id
+        {
+            set { _id = value; }
+            get { return _id; }
+        }
 
         public Packet(ushort opCode, long id)
         {
-            using (_readWriteLock.Write())
+            using (_rwLock.Write())
             {
                 OpCode = opCode;
                 Id = id;
@@ -53,14 +61,13 @@ namespace Shared.Network
         }
         public Packet(byte[] buffer, int offset)
         {
-            using (_readWriteLock.Write())
+            using (_rwLock.Write())
             {
                 Buffer = buffer;
                 Position = offset;
 
-                OpCode = BitConverter.ToUInt16(buffer, Position);
-                Id = BitConverter.ToInt64(buffer, Position + sizeof(ushort));
-                Position += sizeof(ushort) + sizeof(long);
+                PacketConverter.ToObject(out _opCode, Buffer, ref Position, true);
+                PacketConverter.ToObject(out _id, Buffer, ref Position, true);
 
                 _bodyLength = ReadVarInt(Buffer, ref Position);
                 _elements = ReadVarInt(Buffer, ref Position);
@@ -73,7 +80,7 @@ namespace Shared.Network
 
         public Packet Clear(ushort opCode, long id)
         {
-            using (_readWriteLock.Write())
+            using (_rwLock.Write())
             {
                 OpCode = opCode;
                 Id = id;
@@ -92,15 +99,15 @@ namespace Shared.Network
         }
         public PacketElementTypes Peek()
         {
-            using (_readWriteLock.Read())
+            using (_rwLock.Read())
             {
                 if (Position + sizeof(PacketElementTypes) + 1 > Buffer.Length) { return PacketElementTypes.None; }
-                return (PacketElementTypes)Buffer[Position];
+                return PacketConverter.ToObject<PacketElementTypes>(ref Buffer, ref Position, false);
             }
         }
         public bool NextIs(PacketElementTypes type)
         {
-            return (Peek() == type);
+            return Peek() == type;
         }
         protected bool IsRequireSize(int required)
         {
@@ -108,22 +115,21 @@ namespace Shared.Network
             Array.Resize(ref Buffer, Buffer.Length + Math.Max(AddSize, required * 2));
             return true;
         }
-        private void IsReadable(int byteCount)
+        private bool IsValidType(PacketElementTypes type)
         {
-            if (byteCount <= 0) throw new ArgumentOutOfRangeException(nameof(byteCount));
-            if (Position + byteCount > Buffer.Length)
-                throw new IndexOutOfRangeException(Localization.Get("Shared.Network.Packet.IsReadable.Exception"));
+            return type >= PacketElementTypes.Byte && type <= PacketElementTypes.Bool;
         }
 
         #region Write
+        //TODO: write and write with lenght use with packet converter class
         protected Packet WriteSimple(PacketElementTypes type, params byte[] val)
         {
-            using (_readWriteLock.Write())
+            using (_rwLock.Write())
             {
                 var length = sizeof(PacketElementTypes) + val.Length;
                 IsRequireSize(length);
 
-                Buffer[Position] = (byte)type;//TODO:Spesfic
+                PacketConverter.GetBytes(type).CopyTo(Buffer, Position);
                 Position += sizeof(PacketElementTypes);
 
                 val.CopyTo(Buffer, Position);
@@ -136,77 +142,46 @@ namespace Shared.Network
         protected Packet WriteWithLength(PacketElementTypes type, byte[] val)
         {
             Array.Resize(ref val, sizeof(ushort) + val.Length);
-            Array.Copy(val, 0, val, sizeof(ushort), val.Length - sizeof(ushort));
-            BitConverter.GetBytes((ushort)(val.Length - sizeof(ushort))).CopyTo(val, 0);
+            System.Buffer.BlockCopy(val, 0, val, sizeof(ushort), val.Length - sizeof(ushort));
+            PacketConverter.GetBytes((ushort)(val.Length - sizeof(ushort))).CopyTo(val, 0);
             return WriteSimple(type, val);
         }
 
         public Packet Write() { return Write((byte)0); }
         public Packet Write(byte val) { return WriteSimple(PacketElementTypes.Byte, val); }
-        public Packet Write(sbyte val) { return WriteSimple(PacketElementTypes.SByte, (byte)val); }
-        public Packet Write(bool val) { return WriteSimple(PacketElementTypes.Bool, BitConverter.GetBytes(val)); }
-        public Packet Write(short val) { return WriteSimple(PacketElementTypes.Short, BitConverter.GetBytes(val)); }
-        public Packet Write(ushort val) { return WriteSimple(PacketElementTypes.UShort, BitConverter.GetBytes(val)); }
-        public Packet Write(int val) { return WriteSimple(PacketElementTypes.Int, BitConverter.GetBytes(val)); }
-        public Packet Write(uint val) { return WriteSimple(PacketElementTypes.UInt, BitConverter.GetBytes(val)); }
-        public Packet Write(long val) { return WriteSimple(PacketElementTypes.Long, BitConverter.GetBytes(val)); }
-        public Packet Write(ulong val) { return WriteSimple(PacketElementTypes.ULong, BitConverter.GetBytes(val)); }
-        public Packet Write(float val) { return WriteSimple(PacketElementTypes.Float, BitConverter.GetBytes(val)); }
+        public Packet Write(bool val) { return WriteSimple(PacketElementTypes.Bool, PacketConverter.GetBytes(val)); }
+        public Packet Write(short val) { return WriteSimple(PacketElementTypes.Short, PacketConverter.GetBytes(val)); }
+        public Packet Write(ushort val) { return WriteSimple(PacketElementTypes.UShort, PacketConverter.GetBytes(val)); }
+        public Packet Write(int val) { return WriteSimple(PacketElementTypes.Int, PacketConverter.GetBytes(val)); }
+        public Packet Write(uint val) { return WriteSimple(PacketElementTypes.UInt, PacketConverter.GetBytes(val)); }
+        public Packet Write(long val) { return WriteSimple(PacketElementTypes.Long, PacketConverter.GetBytes(val)); }
+        public Packet Write(ulong val) { return WriteSimple(PacketElementTypes.ULong, PacketConverter.GetBytes(val)); }
+        public Packet Write(float val) { return WriteSimple(PacketElementTypes.Float, PacketConverter.GetBytes(val)); }
         public Packet Write(decimal val) { return WriteSimple(PacketElementTypes.Decimal, PacketConverter.GetBytes(val)); }
-        public Packet Write(double val) { return WriteSimple(PacketElementTypes.Double, BitConverter.GetBytes(val)); }
-        public Packet Write(string val) { return WriteWithLength(PacketElementTypes.String, Encoding.UTF8.GetBytes(val)); }
-        public Packet Write(char val) { return WriteSimple(PacketElementTypes.Char, BitConverter.GetBytes(val)); }
+        public Packet Write(double val) { return WriteSimple(PacketElementTypes.Double, PacketConverter.GetBytes(val)); }
+        public Packet Write(string val) { return WriteWithLength(PacketElementTypes.String, PacketConverter.GetBytes(val)); }
+        public Packet Write(char val) { return WriteSimple(PacketElementTypes.Char, PacketConverter.GetBytes(val)); }
         public Packet Write(string format, params object[] args) { return Write(string.Format(format ?? string.Empty, args)); }
         public Packet Write(byte[] val) { return WriteWithLength(PacketElementTypes.Bin, val); }
-        public Packet Write(object val)
-        {
-            var type = val.GetType();
-            if (!type.IsValueType || type.IsPrimitive)
-                throw new Exception(Localization.Get("Shared.Network.Packet.Write.Exception"));
-
-            var size = Marshal.SizeOf(val);
-            var arr = new byte[size];
-
-            IntPtr ptr = IntPtr.Zero;
-            try
-            {
-                ptr = Marshal.AllocHGlobal(size);
-                Marshal.StructureToPtr(val, ptr, true);
-                Marshal.Copy(ptr, arr, 0, size);
-            }
-            finally
-            {
-                if (ptr != IntPtr.Zero)
-                    Marshal.FreeHGlobal(ptr);
-            }
-
-            return Write(arr);
-        }
+        public Packet Write(object val) { return Write(PacketConverter.GetBytes(val)); }
         #endregion
 
         #region Read
-        protected T Get<T>(Func<byte[], int, T> converter)
+        protected T Get<T>(PacketConverter.PacketConverterEvent<T> converter)
         {
-            using (_readWriteLock.Read())
+            using (_rwLock.Read())
             {
-                var len = Marshal.SizeOf(typeof(T));
-                if (typeof(T) == typeof(bool)) len = 1;
-                else if (typeof(T) == typeof(char)) len = 2;
-                IsReadable(sizeof(PacketElementTypes) + len);
-                Position += sizeof(PacketElementTypes);
-                var val = converter(Buffer, Position);
-                Position += len;
+                PacketConverter.ToObject<PacketElementTypes>(ref Buffer, ref Position, true);
+                var val = converter(ref Buffer, ref Position, true);
                 return val;
             }
         }
-        protected T Get<T>(Func<byte[], int, int, T> converter)
+        protected T Get<T>(PacketConverter.PacketConverterWithLenghtEvent<T> converter)
         {
-            var len = Get(BitConverter.ToUInt16);
-            using (_readWriteLock.Read())
+            var len = Get(PacketConverter.ToObject<ushort>);
+            using (_rwLock.Read())
             {
-                IsReadable(len);
-                var val = converter(Buffer, Position, len);
-                Position += len;
+                var val = converter(ref Buffer, ref Position, len, true);
                 return val;
             }
         }
@@ -215,99 +190,87 @@ namespace Shared.Network
         {
             if (!NextIs(PacketElementTypes.Byte))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetByte.Exception"), Peek()));
-            return Get(PacketConverter.ToByte);
-        }
-        public sbyte GetSByte()
-        {
-            if (!NextIs(PacketElementTypes.SByte))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetSByte.Exception"), Peek()));
-            return Get(PacketConverter.ToSByte);
+            return Get(PacketConverter.ToObject<byte>);
         }
         public bool GetBool()
         {
             if (!NextIs(PacketElementTypes.Bool))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetBool.Exception"), Peek()));
-            return Get(PacketConverter.ToBoolean);
+            return Get(PacketConverter.ToObject<bool>);
         }
         public short GetShort()
         {
             if (!NextIs(PacketElementTypes.Short))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetShort.Exception"), Peek()));
-            return Get(PacketConverter.ToInt16);
+            return Get(PacketConverter.ToObject<short>);
         }
         public ushort GetUShort()
         {
             if (!NextIs(PacketElementTypes.UShort))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetUShort.Exception"), Peek()));
-            return Get(PacketConverter.ToUInt16);
+            return Get(PacketConverter.ToObject<ushort>);
         }
         public int GetInt()
         {
             if (!NextIs(PacketElementTypes.Int))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetInt.Exception"), Peek()));
-            return Get(PacketConverter.ToInt32);
+            return Get(PacketConverter.ToObject<int>);
         }
         public uint GetUInt()
         {
             if (!NextIs(PacketElementTypes.UInt))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetUInt.Exception"), Peek()));
-            return Get(PacketConverter.ToUInt32);
+            return Get(PacketConverter.ToObject<uint>);
         }
         public long GetLong()
         {
             if (!NextIs(PacketElementTypes.Long))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetLong.Exception"), Peek()));
-            return Get(PacketConverter.ToInt64);
+            return Get(PacketConverter.ToObject<long>);
         }
         public ulong GetULong()
         {
             if (!NextIs(PacketElementTypes.ULong))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetULong.Exception"), Peek()));
-            return Get(PacketConverter.ToUInt64);
+            return Get(PacketConverter.ToObject<ulong>);
         }
         public float GetFloat()
         {
             if (!NextIs(PacketElementTypes.Float))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetFloat.Exception"), Peek()));
-            return Get(PacketConverter.ToSingle);
+            return Get(PacketConverter.ToObject<float>);
         }
         public decimal GetDecimal()
         {
             if (!NextIs(PacketElementTypes.Decimal))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetFloat.Exception"), Peek()));
-            return Get(PacketConverter.ToDecimal);
+            return Get(PacketConverter.ToObject<decimal>);
         }
         public double GetDouble()
         {
             if (!NextIs(PacketElementTypes.Double))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetFloat.Exception"), Peek()));
-            return Get(PacketConverter.ToDouble);
+            return Get(PacketConverter.ToObject<double>);
         }
         public string GetString()
         {
             if (!NextIs(PacketElementTypes.String))
                 throw new ArgumentException(string.Format(Localization.Get("Shared.Network.Packet.GetString.Exception"), Peek()));
-            return Get(PacketConverter.ToString);
+            return Get(PacketConverter.ToObjectWithLenght<string>);
         }
         public char GetChar()
         {
             if (!NextIs(PacketElementTypes.Char))
                 throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetByte.Exception"), Peek()));
-            return Get(PacketConverter.ToChar);
+            return Get(PacketConverter.ToObject<char>);
         }
         public byte[] GetBin()
         {
             if (!NextIs(PacketElementTypes.Bin))
                 throw new ArgumentException(string.Format(Localization.Get("Shared.Network.Packet.GetBin.Exception"), Peek()));
-            return Get(PacketConverter.ToBin);
+            return Get(PacketConverter.ToObjectWithLenght<byte[]>);
         }
-        public T GetObj<T>() where T : new()
-        {
-            var type = typeof(T);
-            if (!type.IsValueType || type.IsPrimitive)
-                throw new Exception(Localization.Get("Shared.Network.Packet.GetObj.Exception"));
-            return Get(PacketConverter.ToObject<T>);
-        }
+        public T GetObj<T>() where T : new() => Get(PacketConverter.ToObjectWithLenght<T>);
         public void Skip(int num = 1)
         {
             for (int i = 0; i < num; ++i)
@@ -321,13 +284,12 @@ namespace Shared.Network
                     case PacketElementTypes.Float: GetFloat(); break;
                     case PacketElementTypes.String: GetString(); break;
                     case PacketElementTypes.Bin: GetBin(); break;
-                    case PacketElementTypes.SByte: GetSByte(); break;
                     case PacketElementTypes.UShort: GetUShort(); break;
                     case PacketElementTypes.UInt: GetUInt(); break;
                     case PacketElementTypes.ULong: GetULong(); break;
                     case PacketElementTypes.Bool: GetBool(); break;
-                    case PacketElementTypes.Decimal:GetDecimal();break;
-                    case PacketElementTypes.Double:GetDouble();break;
+                    case PacketElementTypes.Decimal: GetDecimal(); break;
+                    case PacketElementTypes.Double: GetDouble(); break;
                     case PacketElementTypes.Char: GetChar(); break;
                 }
             }
@@ -380,16 +342,17 @@ namespace Shared.Network
 
             return result;
         }
+        //TODO: opcode and id do spesific
         public void Build(ref byte[] buffer, int offset)
         {
-            using (_readWriteLock.UpgradeableRead())
+            using (_rwLock.UpgradeableRead())
             {
                 if (buffer.Length < offset + GetSize())
                     throw new Exception(Localization.Get("Shared.Network.Packet.Build.Exception"));
 
                 {
-                    Array.Copy(BitConverter.GetBytes(OpCode), 0, buffer, offset, sizeof(ushort));
-                    Array.Copy(BitConverter.GetBytes(Id), 0, buffer, offset + sizeof(ushort), sizeof(long));
+                    System.Buffer.BlockCopy(PacketConverter.GetBytes(OpCode), 0, buffer, offset, sizeof(ushort));
+                    System.Buffer.BlockCopy(PacketConverter.GetBytes(Id), 0, buffer, offset + sizeof(ushort), sizeof(long));
                     offset += sizeof(ushort) + sizeof(long);
 
                     WriteVarInt(_bodyLength, buffer, ref offset);
@@ -398,14 +361,10 @@ namespace Shared.Network
                     buffer[offset++] = 0;
                 }
 
-                Array.Copy(Buffer, BodyStart, buffer, offset, _bodyLength);
+                System.Buffer.BlockCopy(Buffer, BodyStart, buffer, offset, _bodyLength);
             }
         }
 
-        private bool IsValidType(PacketElementTypes type)
-        {
-            return (type >= PacketElementTypes.Byte && type <= PacketElementTypes.Bool);
-        }
         public override string ToString()
         {
             var result = new StringBuilder();
@@ -424,12 +383,6 @@ namespace Shared.Network
                         {
                             var data = GetByte();
                             result.AppendFormat("{0:000} [{1}] Byte    : {2}", i, data.ToString("X2").PadLeft(32, '.'), data);
-                        }
-                        break;
-                    case PacketElementTypes.SByte:
-                        {
-                            var data = GetSByte();
-                            result.AppendFormat("{0:000} [{1}] SByte   : {2}", i, data.ToString("X2").PadLeft(32, '.'), data);
                         }
                         break;
                     case PacketElementTypes.Bool:
@@ -465,7 +418,7 @@ namespace Shared.Network
                     case PacketElementTypes.Long:
                         {
                             var data = GetLong();
-                            result.AppendFormat("{0:000} [{1}] Long    : {2}", i, data.ToString("X16").PadLeft(32,'.'), data);
+                            result.AppendFormat("{0:000} [{1}] Long    : {2}", i, data.ToString("X16").PadLeft(32, '.'), data);
                         }
                         break;
                     case PacketElementTypes.ULong:
@@ -478,7 +431,7 @@ namespace Shared.Network
                         {
                             var data = GetFloat();
 
-                            var hex = (BitConverter.DoubleToInt64Bits(data) >> 32).ToString("X8");
+                            var hex = (PacketConverter.DoubleToInt64Bits(data) >> 32).ToString("X8");
                             if (hex.Length > 8)
                                 hex = hex.Substring(8);
 
@@ -493,7 +446,7 @@ namespace Shared.Network
                         break;
                     case PacketElementTypes.Bin:
                         {
-                            var data = BitConverter.ToString(GetBin());
+                            var data = PacketConverter.ToStringBinary(GetBin());
                             var splitted = data.Split('-');
 
                             result.AppendFormat("{0:000} [{1}] Bin     : ", i, "".PadLeft(32, '.'));
@@ -518,7 +471,7 @@ namespace Shared.Network
                     case PacketElementTypes.Double:
                         {
                             var data = GetDouble();
-                            var hex = (BitConverter.DoubleToInt64Bits(data) >> 64).ToString("X8");
+                            var hex = (PacketConverter.DoubleToInt64Bits(data) >> 64).ToString("X8");
                             result.AppendFormat("{0:000} [{1}] Double  : {2}", i, hex.PadLeft(32, '.'), data.ToString("0.0####", CultureInfo.InvariantCulture));
                         }
                         break;
@@ -542,7 +495,7 @@ namespace Shared.Network
 
         public void Dispose()
         {
-            using (_readWriteLock.Write())
+            using (_rwLock.Write())
             {
                 Array.Clear(Buffer, 0, Buffer.Length);
                 Buffer = null;
@@ -559,8 +512,7 @@ namespace Shared.Network
         public override bool Equals(object obj)
         {
             if (!(obj is Packet)) return false;
-            var a = ((Packet)obj).Build();
-            return Build().SequenceEqual(a);
+            return Build().SequenceEqual(((Packet)obj).Build());
         }
     }
 }

@@ -29,7 +29,7 @@ namespace Shared.Test.Network
             pack = new Packet(1, 0)
                 .Write()
                 .Write((byte)1)
-                .Write((sbyte)-1)
+                //.Write((sbyte)-1)
 
                 .Write(true)
                 .Write(false)
@@ -71,7 +71,7 @@ namespace Shared.Test.Network
 
             Assert.AreEqual(pck.GetByte(), (byte)0, "Zero Byte Test");
             Assert.AreEqual(pck.GetByte(), (byte)1, "Byte Test");
-            Assert.AreEqual(pck.GetSByte(), (sbyte)-1, "SByte Test");
+            //Assert.AreEqual(pck.GetSByte(), (sbyte)-1, "SByte Test");
 
             Assert.AreEqual(pck.GetBool(), true, "Bool Test");
             Assert.AreEqual(pck.GetBool(), false, "Bool Test");
