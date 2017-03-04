@@ -65,6 +65,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Embed\Localization\en.lang" />
     <EmbeddedResource Include="Embed\Localization\tr.lang" />
+    <None Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Database\" />
