@@ -16,6 +16,7 @@ namespace Shared
         public const ushort AddNewCharacter = 4;
 
         public const ushort MoveObject = 918;
+        public const ushort GetAroundPlayers = 919;
 
         public static string GetName(ushort opcode)
         {

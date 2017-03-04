@@ -1,5 +1,0 @@
-﻿Database
-Schema
-
-DisposedObject Exception Client And Server -> BaseClient - BaseServer OnReceive / Kill
-if Many request same time, Unimplemented Packet -> encryption
