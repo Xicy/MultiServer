@@ -10,9 +10,6 @@ namespace Shared.Util
         private static readonly Type Bct = typeof(BitConverter);
         private static readonly Encoding Encoding = Encoding.UTF8;
 
-        public delegate T PacketConverterEvent<out T>(ref byte[] buffer, ref int position, bool skipPosition);
-        public delegate T PacketConverterWithLenghtEvent<out T>(ref byte[] buffer, ref int position, int length, bool skipPosition);
-
         internal static T ToObjectWithLenght<T>(ref byte[] buffer, ref int position, int length, bool skipPosition)
         {
             var type = typeof(T);
@@ -21,13 +18,12 @@ namespace Shared.Util
 
             object ret;
 
-            if (length == 0)
+            if (length <= 0)
             {
                 length = Marshal.SizeOf(type);
                 if (type == typeof(bool)) length = 1;
                 else if (type == typeof(char)) length = 2;
             }
-            if (length <= 0) throw new ArgumentOutOfRangeException(nameof(length));
             if (position + length > buffer.Length) throw new IndexOutOfRangeException(Localization.Get("Shared.Network.Packet.IsReadable.Exception"));
 
             if (!type.IsArray)
@@ -51,10 +47,7 @@ namespace Shared.Util
                 }
                 else if (type.IsPrimitive)
                 {
-                    var miGetBytes = Bct.GetMethod("To" + type.Name);
-                    if (miGetBytes == null)
-                        throw new InvalidOperationException("Method: GetBytes on BitConverter does not have an overload accepting one paramter of type: " + type.FullName);
-                    ret = miGetBytes.Invoke(null, new object[] { buffer, position });
+                    ret = Bct.GetMethod("To" + type.Name).Invoke(null, new object[] { buffer, position });
                 }
                 else
                 {
@@ -86,18 +79,15 @@ namespace Shared.Util
         {
             return ToObjectWithLenght<T>(ref buffer, ref position, 0, skipPosition);
         }
-        internal static void ToObject<T>(out T ret, byte[] buffer, ref int position, bool skipPosition)
+        internal static void ToObject<T>(out T ret, ref byte[] buffer, ref int position, bool skipPosition)
         {
             ret = ToObjectWithLenght<T>(ref buffer, ref position, 0, skipPosition);
         }
 
-        internal static long DoubleToInt64Bits(double value) => BitConverter.DoubleToInt64Bits(value);
-        internal static string ToStringBinary(byte[] value) => BitConverter.ToString(value);
-
-
         internal static byte[] GetBytes(object obj)
         {
             var type = obj.GetType();
+            if (type.IsArray && type.GetElementType() == typeof(byte)) return (byte[])obj;
             if (type.IsEnum)
                 type = Enum.GetUnderlyingType(type);
 
@@ -111,16 +101,8 @@ namespace Shared.Util
                     BitConverter.GetBytes(bits[i]).CopyTo(bytesRet, i * 4);
             }
             else if (type == typeof(string)) bytesRet = Encoding.GetBytes((string)obj);
-            else if (type.IsPrimitive)
-            {
-                var miGetBytes = Bct.GetMethod("GetBytes", new[] { type });
-                if (miGetBytes == null)
-                    throw new InvalidOperationException(
-                        "Method: GetBytes on BitConverter does not have an overload accepting one paramter of type: " +
-                        type.FullName);
-                bytesRet = (byte[])miGetBytes.Invoke(null, new object[] { obj });
-            }
-            else
+            else if (type.IsPrimitive) bytesRet = (byte[])Bct.GetMethod("GetBytes", new[] { type }).Invoke(null, new[] { obj });
+            else if (type.StructLayoutAttribute != null && type.StructLayoutAttribute.Value != LayoutKind.Auto)
             {
                 var size = Marshal.SizeOf(obj);
                 var ptr = IntPtr.Zero;
@@ -138,7 +120,7 @@ namespace Shared.Util
                         Marshal.FreeHGlobal(ptr);
                 }
             }
-
+            else throw new InvalidDataException("Object Not Recognized");
             return bytesRet;
         }
 

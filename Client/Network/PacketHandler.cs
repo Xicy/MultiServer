@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Shared;
 using Shared.Network;
 using Shared.Schema;
-using Shared.Util;
+
 
 namespace Client
 {
@@ -22,14 +22,14 @@ namespace Client
         [PacketHandler(OpCodes.MoveObject)]
         public void MoveObject(GameClient client, Packet packet)
         {
-            var go = packet.GetObj<GameObject>();
+            packet.Read(out GameObject go);
             GameObjects[go.ID] = go;
         }
 
         [PacketHandler(OpCodes.Crypter)]
         public void Crypter(GameClient client, Packet packet)
         {
-            client.ID = packet.GetLong();
+            client.ID = packet.Read<long>();
             GameObjects.Add(client.ID, client);
             client.GetAroundPlayers();
         }
@@ -37,7 +37,7 @@ namespace Client
         [PacketHandler(OpCodes.Ping)]
         public void Ping(GameClient client, Packet packet)
         {
-            var cur = new DateTime(packet.GetLong());
+            var cur = new DateTime(packet.Read<long>());
             Task.Delay(30).ContinueWith(task => client.Ping());
 
             Console.Clear();
@@ -50,7 +50,7 @@ namespace Client
         }
 
         [PacketHandler(999)]
-        public void RemoveObject(GameClient client, Packet packet) => GameObjects.Remove(packet.GetObj<GameObject>().ID);
+        public void RemoveObject(GameClient client, Packet packet) => GameObjects.Remove(packet.Read<GameObject>().ID);
 
     }
 }

@@ -4,7 +4,6 @@ using Shared;
 using Shared.Util;
 using Shared.Network;
 using Shared.Schema;
-using Shared.Security;
 
 namespace Server
 {
@@ -20,7 +19,7 @@ namespace Server
         [PacketHandler(OpCodes.Crypter)]
         public void Crypter(GameClient client, Packet packet)
         {
-            var crypterStatus = packet.GetBool();
+            var crypterStatus = packet.Read<bool>();
             if (!crypterStatus)
             {
                 client.Crypter(URandom.Long());
@@ -35,7 +34,7 @@ namespace Server
         [PacketHandler(OpCodes.Ping)]
         public void Ping(GameClient client, Packet packet)
         {
-            client.LastPingTime = new DateTime(packet.GetLong());
+            client.LastPingTime = new DateTime(packet.Read<long>());
             client.Ping();
         }
 
@@ -48,7 +47,7 @@ namespace Server
         [PacketHandler(OpCodes.MoveObject)]
         public void Move(GameClient client, Packet packet)
         {
-            Directions direction = (Directions)packet.GetByte();
+            var direction = packet.Read<Directions>();
             byte x = client.X, y = client.Y;
             switch (direction)
             {

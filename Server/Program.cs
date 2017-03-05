@@ -15,7 +15,7 @@ namespace Server
             CliUtil.WriteHeader(Localization.Get("Server.Program.Main.Title"), ConsoleColor.Red);
 
             var console = new ConsoleCommands();
-            console.Add("status", "<GCollet:Bool>", Localization.Get("Server.Program.Main.ConsoleCommands.Description.Status"), HandleStatus);
+            console.Add("status", "<GCollet:Boolean>", Localization.Get("Server.Program.Main.ConsoleCommands.Description.Status"), HandleStatus);
             console.Add("stop", "Stop the server", HandleStop);
             console.Add("start", "Start the server", HandleStart);
             Server = new GameServer();

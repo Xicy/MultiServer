@@ -20,7 +20,7 @@ namespace Client
         }
         public static void Move(this GameClient client, Directions dir)
         {
-            client.Send(new Packet(OpCodes.MoveObject, client.ID).Write((byte)dir));
+            client.Send(new Packet(OpCodes.MoveObject, client.ID).Write(dir));
         }
         public static void GetAroundPlayers(this GameClient client) => client.Send(new Packet(OpCodes.GetAroundPlayers, client.ID));
     }

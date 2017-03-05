@@ -11,21 +11,22 @@ namespace Shared.Network
     {
         None,
         Byte,
-        Short,
-        UShort,
-        Int,
-        UInt,
-        Long,
-        ULong,
-        Float,
+        Int16,
+        UInt16,
+        Int32,
+        UInt32,
+        Int64,
+        UInt64,
+        Single,
         Decimal,
         Double,
         String,
         Char,
         Bin,
-        Bool
+        Boolean
     }
 
+    //TODO:Seek
     public class Packet : IDisposable
     {
         private const ushort DefaultBufferSize = 1024;
@@ -66,13 +67,12 @@ namespace Shared.Network
                 Buffer = buffer;
                 Position = offset;
 
-                PacketConverter.ToObject(out _opCode, Buffer, ref Position, true);
-                PacketConverter.ToObject(out _id, Buffer, ref Position, true);
+                PacketConverter.ToObject(out _opCode, ref Buffer, ref Position, true);
+                PacketConverter.ToObject(out _id, ref Buffer, ref Position, true);
 
                 _bodyLength = ReadVarInt(Buffer, ref Position);
                 _elements = ReadVarInt(Buffer, ref Position);
-
-                Position++; //0x00
+                Position++; //For VarInt Finish
 
                 BodyStart = Position;
             }
@@ -117,184 +117,88 @@ namespace Shared.Network
         }
         private bool IsValidType(PacketElementTypes type)
         {
-            return type >= PacketElementTypes.Byte && type <= PacketElementTypes.Bool;
+            return type >= PacketElementTypes.Byte && type <= PacketElementTypes.Boolean;
         }
 
-        #region Write
-        //TODO: write and write with lenght use with packet converter class
-        protected Packet WriteSimple(PacketElementTypes type, params byte[] val)
+        private static PacketElementTypes TypeToElement<T>()
         {
+            var type = typeof(T);
+            if (type.IsArray && type.GetElementType() == typeof(byte)) return PacketElementTypes.Bin;
+
+            PacketElementTypes ret;
+            if (Enum.TryParse(type.Name, true, out ret)) return ret;
+
+            return type.IsValueType ? PacketElementTypes.Bin : PacketElementTypes.None;
+        }
+
+        public Packet Write<T>(T obj)
+        {
+            var pType = TypeToElement<T>();
+            var bytes = PacketConverter.GetBytes(obj);
+            if (pType == PacketElementTypes.String || pType == PacketElementTypes.Bin)
+            {
+                Array.Resize(ref bytes, sizeof(ushort) + bytes.Length);
+                System.Buffer.BlockCopy(bytes, 0, bytes, sizeof(ushort), bytes.Length - sizeof(ushort));
+                PacketConverter.GetBytes((ushort)(bytes.Length - sizeof(ushort))).CopyTo(bytes, 0);
+            }
+            var length = sizeof(PacketElementTypes) + bytes.Length;
             using (_rwLock.Write())
             {
-                var length = sizeof(PacketElementTypes) + val.Length;
                 IsRequireSize(length);
 
-                PacketConverter.GetBytes(type).CopyTo(Buffer, Position);
+                PacketConverter.GetBytes(pType).CopyTo(Buffer, Position);
                 Position += sizeof(PacketElementTypes);
 
-                val.CopyTo(Buffer, Position);
-                Position += val.Length;
+                bytes.CopyTo(Buffer, Position);
+                Position += bytes.Length;
                 _elements++;
                 _bodyLength += length;
             }
             return this;
         }
-        protected Packet WriteWithLength(PacketElementTypes type, byte[] val)
+        public T Read<T>()
         {
-            Array.Resize(ref val, sizeof(ushort) + val.Length);
-            System.Buffer.BlockCopy(val, 0, val, sizeof(ushort), val.Length - sizeof(ushort));
-            PacketConverter.GetBytes((ushort)(val.Length - sizeof(ushort))).CopyTo(val, 0);
-            return WriteSimple(type, val);
-        }
-
-        public Packet Write() { return Write((byte)0); }
-        public Packet Write(byte val) { return WriteSimple(PacketElementTypes.Byte, val); }
-        public Packet Write(bool val) { return WriteSimple(PacketElementTypes.Bool, PacketConverter.GetBytes(val)); }
-        public Packet Write(short val) { return WriteSimple(PacketElementTypes.Short, PacketConverter.GetBytes(val)); }
-        public Packet Write(ushort val) { return WriteSimple(PacketElementTypes.UShort, PacketConverter.GetBytes(val)); }
-        public Packet Write(int val) { return WriteSimple(PacketElementTypes.Int, PacketConverter.GetBytes(val)); }
-        public Packet Write(uint val) { return WriteSimple(PacketElementTypes.UInt, PacketConverter.GetBytes(val)); }
-        public Packet Write(long val) { return WriteSimple(PacketElementTypes.Long, PacketConverter.GetBytes(val)); }
-        public Packet Write(ulong val) { return WriteSimple(PacketElementTypes.ULong, PacketConverter.GetBytes(val)); }
-        public Packet Write(float val) { return WriteSimple(PacketElementTypes.Float, PacketConverter.GetBytes(val)); }
-        public Packet Write(decimal val) { return WriteSimple(PacketElementTypes.Decimal, PacketConverter.GetBytes(val)); }
-        public Packet Write(double val) { return WriteSimple(PacketElementTypes.Double, PacketConverter.GetBytes(val)); }
-        public Packet Write(string val) { return WriteWithLength(PacketElementTypes.String, PacketConverter.GetBytes(val)); }
-        public Packet Write(char val) { return WriteSimple(PacketElementTypes.Char, PacketConverter.GetBytes(val)); }
-        public Packet Write(string format, params object[] args) { return Write(string.Format(format ?? string.Empty, args)); }
-        public Packet Write(byte[] val) { return WriteWithLength(PacketElementTypes.Bin, val); }
-        public Packet Write(object val) { return Write(PacketConverter.GetBytes(val)); }
-        #endregion
-
-        #region Read
-        protected T Get<T>(PacketConverter.PacketConverterEvent<T> converter)
-        {
+            var type = TypeToElement<T>();
+            var checkType = Peek();
+            if (type != checkType) throw new Exception(string.Format("Expected {0}, got {1}.", type, checkType));
+            if (type == PacketElementTypes.None) return default(T);
             using (_rwLock.Read())
             {
-                PacketConverter.ToObject<PacketElementTypes>(ref Buffer, ref Position, true);
-                var val = converter(ref Buffer, ref Position, true);
-                return val;
+                type = PacketConverter.ToObject<PacketElementTypes>(ref Buffer, ref Position, true);
+                ushort len = 0;
+                if (type == PacketElementTypes.String || type == PacketElementTypes.Bin) PacketConverter.ToObject(out len, ref Buffer, ref Position, true);
+                return PacketConverter.ToObjectWithLenght<T>(ref Buffer, ref Position, len, true);
             }
         }
-        protected T Get<T>(PacketConverter.PacketConverterWithLenghtEvent<T> converter)
+        public Packet Read<T>(out T o)
         {
-            var len = Get(PacketConverter.ToObject<ushort>);
-            using (_rwLock.Read())
-            {
-                var val = converter(ref Buffer, ref Position, len, true);
-                return val;
-            }
+            o = Read<T>();
+            return this;
         }
 
-        public byte GetByte()
-        {
-            if (!NextIs(PacketElementTypes.Byte))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetByte.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<byte>);
-        }
-        public bool GetBool()
-        {
-            if (!NextIs(PacketElementTypes.Bool))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetBool.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<bool>);
-        }
-        public short GetShort()
-        {
-            if (!NextIs(PacketElementTypes.Short))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetShort.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<short>);
-        }
-        public ushort GetUShort()
-        {
-            if (!NextIs(PacketElementTypes.UShort))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetUShort.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<ushort>);
-        }
-        public int GetInt()
-        {
-            if (!NextIs(PacketElementTypes.Int))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetInt.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<int>);
-        }
-        public uint GetUInt()
-        {
-            if (!NextIs(PacketElementTypes.UInt))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetUInt.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<uint>);
-        }
-        public long GetLong()
-        {
-            if (!NextIs(PacketElementTypes.Long))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetLong.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<long>);
-        }
-        public ulong GetULong()
-        {
-            if (!NextIs(PacketElementTypes.ULong))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetULong.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<ulong>);
-        }
-        public float GetFloat()
-        {
-            if (!NextIs(PacketElementTypes.Float))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetFloat.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<float>);
-        }
-        public decimal GetDecimal()
-        {
-            if (!NextIs(PacketElementTypes.Decimal))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetFloat.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<decimal>);
-        }
-        public double GetDouble()
-        {
-            if (!NextIs(PacketElementTypes.Double))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetFloat.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<double>);
-        }
-        public string GetString()
-        {
-            if (!NextIs(PacketElementTypes.String))
-                throw new ArgumentException(string.Format(Localization.Get("Shared.Network.Packet.GetString.Exception"), Peek()));
-            return Get(PacketConverter.ToObjectWithLenght<string>);
-        }
-        public char GetChar()
-        {
-            if (!NextIs(PacketElementTypes.Char))
-                throw new Exception(string.Format(Localization.Get("Shared.Network.Packet.GetByte.Exception"), Peek()));
-            return Get(PacketConverter.ToObject<char>);
-        }
-        public byte[] GetBin()
-        {
-            if (!NextIs(PacketElementTypes.Bin))
-                throw new ArgumentException(string.Format(Localization.Get("Shared.Network.Packet.GetBin.Exception"), Peek()));
-            return Get(PacketConverter.ToObjectWithLenght<byte[]>);
-        }
-        public T GetObj<T>() where T : new() => Get(PacketConverter.ToObjectWithLenght<T>);
         public void Skip(int num = 1)
         {
             for (int i = 0; i < num; ++i)
             {
                 switch (Peek())
                 {
-                    case PacketElementTypes.Byte: GetByte(); break;
-                    case PacketElementTypes.Short: GetShort(); break;
-                    case PacketElementTypes.Int: GetInt(); break;
-                    case PacketElementTypes.Long: GetLong(); break;
-                    case PacketElementTypes.Float: GetFloat(); break;
-                    case PacketElementTypes.String: GetString(); break;
-                    case PacketElementTypes.Bin: GetBin(); break;
-                    case PacketElementTypes.UShort: GetUShort(); break;
-                    case PacketElementTypes.UInt: GetUInt(); break;
-                    case PacketElementTypes.ULong: GetULong(); break;
-                    case PacketElementTypes.Bool: GetBool(); break;
-                    case PacketElementTypes.Decimal: GetDecimal(); break;
-                    case PacketElementTypes.Double: GetDouble(); break;
-                    case PacketElementTypes.Char: GetChar(); break;
+                    case PacketElementTypes.Byte: Read<byte>(); break;
+                    case PacketElementTypes.Int16: Read<short>(); break;
+                    case PacketElementTypes.Int32: Read<int>(); break;
+                    case PacketElementTypes.Int64: Read<long>(); break;
+                    case PacketElementTypes.Single: Read<float>(); break;
+                    case PacketElementTypes.String: Read<string>(); break;
+                    case PacketElementTypes.Bin: Read<byte[]>(); break;
+                    case PacketElementTypes.UInt16: Read<ushort>(); break;
+                    case PacketElementTypes.UInt32: Read<uint>(); break;
+                    case PacketElementTypes.UInt64: Read<ulong>(); break;
+                    case PacketElementTypes.Boolean: Read<bool>(); break;
+                    case PacketElementTypes.Decimal: Read<decimal>(); break;
+                    case PacketElementTypes.Double: Read<double>(); break;
+                    case PacketElementTypes.Char: Read<char>(); break;
                 }
             }
         }
-        #endregion
 
         private int ReadVarInt(byte[] buffer, ref int ptr)
         {
@@ -302,10 +206,8 @@ namespace Shared.Network
 
             for (int i = 0; ; ++i)
             {
-                result |= (buffer[ptr] & 0x7f) << (i * 7);
-
-                if ((buffer[ptr++] & 0x80) == 0)
-                    break;
+                result |= (buffer[ptr] & 0x7F) << (i * 7);
+                if ((buffer[ptr++] & 0x80) == 0) break;
             }
 
             return result;
@@ -314,13 +216,14 @@ namespace Shared.Network
         {
             do
             {
-                buffer[ptr++] = (byte)(value > 0x7F ? (0x80 | (value & 0xFF)) : value & 0xFF);
+                buffer[ptr++] = (byte)(value > 0x7F ? 0x80 | (value & 0xFF) : value & 0xFF);
             }
             while ((value >>= 7) != 0);
         }
 
         public int GetSize()
         {
+            //TODO: opcode and id do spesific
             var i = sizeof(ushort) + sizeof(long);// op + id + body
 
             int n = _bodyLength; // + body len
@@ -342,7 +245,7 @@ namespace Shared.Network
 
             return result;
         }
-        //TODO: opcode and id do spesific
+
         public void Build(ref byte[] buffer, int offset)
         {
             using (_rwLock.UpgradeableRead())
@@ -351,14 +254,14 @@ namespace Shared.Network
                     throw new Exception(Localization.Get("Shared.Network.Packet.Build.Exception"));
 
                 {
+                    //TODO: opcode and id do spesific
                     System.Buffer.BlockCopy(PacketConverter.GetBytes(OpCode), 0, buffer, offset, sizeof(ushort));
                     System.Buffer.BlockCopy(PacketConverter.GetBytes(Id), 0, buffer, offset + sizeof(ushort), sizeof(long));
                     offset += sizeof(ushort) + sizeof(long);
 
                     WriteVarInt(_bodyLength, buffer, ref offset);
                     WriteVarInt(_elements, buffer, ref offset);
-
-                    buffer[offset++] = 0;
+                    buffer[offset++] = 0;//For VarInt Finish
                 }
 
                 System.Buffer.BlockCopy(Buffer, BodyStart, buffer, offset, _bodyLength);
@@ -372,7 +275,7 @@ namespace Shared.Network
             Position = BodyStart;
 
             result.AppendLine();
-            result.AppendFormat("Op: {0:X04} {2}, Id: {1:X16}" + Environment.NewLine, OpCode, Id, OpCodes.GetName(OpCode));
+            result.AppendFormat("Op: {0:X04}, Id: {1:X16}" + Environment.NewLine, OpCode, Id);
 
             PacketElementTypes type;
             for (int i = 1; (IsValidType(type = Peek()) && Position < Buffer.Length); ++i)
@@ -381,72 +284,72 @@ namespace Shared.Network
                 {
                     case PacketElementTypes.Byte:
                         {
-                            var data = GetByte();
+                            var data = Read<byte>();
                             result.AppendFormat("{0:000} [{1}] Byte    : {2}", i, data.ToString("X2").PadLeft(32, '.'), data);
                         }
                         break;
-                    case PacketElementTypes.Bool:
+                    case PacketElementTypes.Boolean:
                         {
-                            var data = GetBool();
-                            result.AppendFormat("{0:000} [{1}] Bool    : {2}", i, (data ? "01" : "00").PadLeft(32, '.'), data ? "True" : "False");
+                            var data = Read<bool>();
+                            result.AppendFormat("{0:000} [{1}] Boolean    : {2}", i, (data ? "01" : "00").PadLeft(32, '.'), data ? "True" : "False");
                         }
                         break;
-                    case PacketElementTypes.Short:
+                    case PacketElementTypes.Int16:
                         {
-                            var data = GetShort();
-                            result.AppendFormat("{0:000} [{1}] Short   : {2}", i, data.ToString("X4").PadLeft(32, '.'), data);
+                            var data = Read<short>();
+                            result.AppendFormat("{0:000} [{1}] Int16   : {2}", i, data.ToString("X4").PadLeft(32, '.'), data);
                         }
                         break;
-                    case PacketElementTypes.UShort:
+                    case PacketElementTypes.UInt16:
                         {
-                            var data = GetUShort();
-                            result.AppendFormat("{0:000} [{1}] UShort  : {2}", i, data.ToString("X4").PadLeft(32, '.'), data);
+                            var data = Read<ushort>();
+                            result.AppendFormat("{0:000} [{1}] UInt16  : {2}", i, data.ToString("X4").PadLeft(32, '.'), data);
                         }
                         break;
-                    case PacketElementTypes.Int:
+                    case PacketElementTypes.Int32:
                         {
-                            var data = GetInt();
-                            result.AppendFormat("{0:000} [{1}] Int     : {2}", i, data.ToString("X8").PadLeft(32, '.'), data);
+                            var data = Read<int>();
+                            result.AppendFormat("{0:000} [{1}] Int32     : {2}", i, data.ToString("X8").PadLeft(32, '.'), data);
                         }
                         break;
-                    case PacketElementTypes.UInt:
+                    case PacketElementTypes.UInt32:
                         {
-                            var data = GetUInt();
-                            result.AppendFormat("{0:000} [{1}] UInt    : {2}", i, data.ToString("X8").PadLeft(32, '.'), data);
+                            var data = Read<uint>();
+                            result.AppendFormat("{0:000} [{1}] UInt32    : {2}", i, data.ToString("X8").PadLeft(32, '.'), data);
                         }
                         break;
-                    case PacketElementTypes.Long:
+                    case PacketElementTypes.Int64:
                         {
-                            var data = GetLong();
-                            result.AppendFormat("{0:000} [{1}] Long    : {2}", i, data.ToString("X16").PadLeft(32, '.'), data);
+                            var data = Read<long>();
+                            result.AppendFormat("{0:000} [{1}] Int64    : {2}", i, data.ToString("X16").PadLeft(32, '.'), data);
                         }
                         break;
-                    case PacketElementTypes.ULong:
+                    case PacketElementTypes.UInt64:
                         {
-                            var data = GetULong();
-                            result.AppendFormat("{0:000} [{1}] ULong   : {2}", i, data.ToString("X16").PadLeft(32, '.'), data);
+                            var data = Read<ulong>();
+                            result.AppendFormat("{0:000} [{1}] UInt64   : {2}", i, data.ToString("X16").PadLeft(32, '.'), data);
                         }
                         break;
-                    case PacketElementTypes.Float:
+                    case PacketElementTypes.Single:
                         {
-                            var data = GetFloat();
+                            var data = Read<float>();
 
-                            var hex = (PacketConverter.DoubleToInt64Bits(data) >> 32).ToString("X8");
+                            var hex = (BitConverter.DoubleToInt64Bits(data) >> 32).ToString("X8");
                             if (hex.Length > 8)
                                 hex = hex.Substring(8);
 
-                            result.AppendFormat("{0:000} [{1}] Float   : {2}", i, hex.PadLeft(32, '.'), data.ToString("0.0####", CultureInfo.InvariantCulture));
+                            result.AppendFormat("{0:000} [{1}] Single   : {2}", i, hex.PadLeft(32, '.'), data.ToString("0.0####", CultureInfo.InvariantCulture));
                         }
                         break;
                     case PacketElementTypes.String:
                         {
-                            var data = GetString();
+                            var data = Read<string>();
                             result.AppendFormat("{0:000} [{1}] String  : {2}", i, "".PadLeft(32, '.'), data);
                         }
                         break;
                     case PacketElementTypes.Bin:
                         {
-                            var data = PacketConverter.ToStringBinary(GetBin());
+                            var data = BitConverter.ToString(Read<byte[]>());
                             var splitted = data.Split('-');
 
                             result.AppendFormat("{0:000} [{1}] Bin     : ", i, "".PadLeft(32, '.'));
@@ -463,21 +366,21 @@ namespace Shared.Network
                         break;
                     case PacketElementTypes.Decimal:
                         {
-                            var data = GetDecimal();
+                            var data = Read<decimal>();
                             var p = decimal.GetBits(data);
                             result.AppendFormat("{0:000} [{1}] Decimal : {2}", i, (p[0].ToString("X8") + p[1].ToString("X8") + p[2].ToString("X8") + p[3].ToString("X8")).PadLeft(32, '.'), data.ToString("0.0####", CultureInfo.InvariantCulture));
                         }
                         break;
                     case PacketElementTypes.Double:
                         {
-                            var data = GetDouble();
-                            var hex = (PacketConverter.DoubleToInt64Bits(data) >> 64).ToString("X8");
+                            var data = Read<double>();
+                            var hex = (BitConverter.DoubleToInt64Bits(data) >> 64).ToString("X8");
                             result.AppendFormat("{0:000} [{1}] Double  : {2}", i, hex.PadLeft(32, '.'), data.ToString("0.0####", CultureInfo.InvariantCulture));
                         }
                         break;
                     case PacketElementTypes.Char:
                         {
-                            var data = GetChar();
+                            var data = Read<char>();
                             result.AppendFormat("{0:000} [{1}] Char    : {2}", i, ((byte)data).ToString("X2").PadLeft(32, '.'), data);
                         }
                         break;
