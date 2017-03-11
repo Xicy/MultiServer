@@ -50,7 +50,8 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Network\PacketTest.cs" />
+    <Compile Include="Helper.cs" />
+    <Compile Include="Network\Packet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

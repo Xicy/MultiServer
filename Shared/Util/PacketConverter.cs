@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,7 +10,31 @@ namespace Shared.Util
         private static readonly Type Bct = typeof(BitConverter);
         private static readonly Encoding Encoding = Encoding.UTF8;
 
-        internal static T ToObjectWithLenght<T>(ref byte[] buffer, ref int position, int length, bool skipPosition)
+        internal static void CopyTo(this Array srcArray, Array dstArray, ref int dstOffset)
+        {
+            Buffer.BlockCopy(srcArray, 0, dstArray, dstOffset, srcArray.Length);
+            dstOffset += srcArray.Length;
+        }
+
+        public static int SizeOf(this object obj)
+        {
+            return obj.GetType().SizeOf();
+        }
+        public static int SizeOf(this Type type)
+        {
+            if (type.IsEnum)
+                type = Enum.GetUnderlyingType(type);
+
+            int length;
+
+            if (type == typeof(bool)) length = 1;
+            else if (type == typeof(char)) length = 2;
+            else length = Marshal.SizeOf(type);
+
+            return length;
+        }
+
+        internal static T ToObjectWithLenght<T>(ref byte[] buffer, ref int position, int length = 0, bool skipPosition = true)
         {
             var type = typeof(T);
             if (type.IsEnum)
@@ -18,12 +42,8 @@ namespace Shared.Util
 
             object ret;
 
-            if (length <= 0)
-            {
-                length = Marshal.SizeOf(type);
-                if (type == typeof(bool)) length = 1;
-                else if (type == typeof(char)) length = 2;
-            }
+            length = length <= 0 ? type.SizeOf() : length;
+
             if (position + length > buffer.Length) throw new IndexOutOfRangeException(Localization.Get("Shared.Network.Packet.IsReadable.Exception"));
 
             if (!type.IsArray)
@@ -31,6 +51,10 @@ namespace Shared.Util
                 if (type == typeof(byte))
                 {
                     ret = buffer[position];
+                }
+                else if (type == typeof(sbyte))
+                {
+                    ret = unchecked((sbyte)buffer[position]);
                 }
                 else if (type == typeof(decimal))
                 {
@@ -75,11 +99,11 @@ namespace Shared.Util
             if (skipPosition) position += length;
             return (T)ret;
         }
-        internal static T ToObject<T>(ref byte[] buffer, ref int position, bool skipPosition)
+        internal static T ToObject<T>(ref byte[] buffer, ref int position, bool skipPosition = true)
         {
             return ToObjectWithLenght<T>(ref buffer, ref position, 0, skipPosition);
         }
-        internal static void ToObject<T>(out T ret, ref byte[] buffer, ref int position, bool skipPosition)
+        internal static void ToObject<T>(out T ret, ref byte[] buffer, ref int position, bool skipPosition = true)
         {
             ret = ToObjectWithLenght<T>(ref buffer, ref position, 0, skipPosition);
         }
@@ -87,12 +111,13 @@ namespace Shared.Util
         internal static byte[] GetBytes(object obj)
         {
             var type = obj.GetType();
-            if (type.IsArray && type.GetElementType() == typeof(byte)) return (byte[])obj;
+            if (type.IsArray && (type.GetElementType() == typeof(byte) || type.GetElementType() == typeof(sbyte))) return (byte[])obj;
             if (type.IsEnum)
                 type = Enum.GetUnderlyingType(type);
 
             byte[] bytesRet;
             if (type == typeof(byte)) bytesRet = new[] { (byte)obj };
+            else if (type == typeof(sbyte)) bytesRet = new[] { unchecked((byte)(sbyte)obj) }; //Find better solition
             else if (type == typeof(decimal))
             {
                 var bits = decimal.GetBits((decimal)obj);
@@ -104,7 +129,7 @@ namespace Shared.Util
             else if (type.IsPrimitive) bytesRet = (byte[])Bct.GetMethod("GetBytes", new[] { type }).Invoke(null, new[] { obj });
             else if (type.StructLayoutAttribute != null && type.StructLayoutAttribute.Value != LayoutKind.Auto)
             {
-                var size = Marshal.SizeOf(obj);
+                var size = obj.SizeOf();//Marshal.SizeOf(obj);
                 var ptr = IntPtr.Zero;
                 bytesRet = new byte[size];
 
