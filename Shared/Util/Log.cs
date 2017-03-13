@@ -115,7 +115,7 @@ namespace Shared.Util
         {
             if (description != null)
             {
-                if (Hide.HasFlag(LogLevel.Exception))
+                if (Helper.HasFlag((ulong)Hide, (ulong)LogLevel.Exception))
                     description += " " + Localization.Get("Shared.Util.Log.Exception.Description");
 
                 WriteLine(LogLevel.Error, description, args);
@@ -156,7 +156,7 @@ namespace Shared.Util
         {
             lock (Console.Out)
             {
-                if (!Hide.HasFlag(level))
+                if (!Helper.HasFlag((ulong)Hide, (ulong)level))
                 {
                     switch (level)
                     {

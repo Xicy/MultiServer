@@ -80,8 +80,8 @@ namespace Shared.Network
                 Buffer = buffer;
                 Position = offset;
 
-                PacketConverter.ToObject(out _opCode, ref Buffer, ref Position);
-                PacketConverter.ToObject(out _id, ref Buffer, ref Position);
+                Helper.ToObject(out _opCode, ref Buffer, ref Position);
+                Helper.ToObject(out _id, ref Buffer, ref Position);
 
                 _bodyLength = ReadVarInt(Buffer, ref Position);
                 _elements = ReadVarInt(Buffer, ref Position);
@@ -119,7 +119,7 @@ namespace Shared.Network
         public PacketElementTypes Peek()
         {
             using (_rwLock.Read())
-                return Position + _sizeOfPacketElementType + 1 > Buffer.Length ? PacketElementTypes.None : PacketConverter.ToObject<PacketElementTypes>(ref Buffer, ref Position, false);
+                return Position + _sizeOfPacketElementType + 1 > Buffer.Length ? PacketElementTypes.None : Helper.ToObject<PacketElementTypes>(ref Buffer, ref Position, false);
 
         }
         public bool NextIs(PacketElementTypes type)
@@ -142,8 +142,8 @@ namespace Shared.Network
             var type = typeof(T);
             if (type.IsArray && type.GetElementType() == typeof(byte)) return PacketElementTypes.Bin;
 
-            PacketElementTypes ret;
-            if (Enum.TryParse(type.Name, true, out ret)) return ret;
+            object ret;
+            if (Helper.TryParse(typeof(PacketElementTypes), type.Name, true, out ret)) return (PacketElementTypes)ret;
 
             return type.IsValueType ? PacketElementTypes.Bin : PacketElementTypes.None;
         }
@@ -151,19 +151,19 @@ namespace Shared.Network
         public Packet Write<T>(T obj)
         {
             var pType = TypeToElement<T>();
-            var bytes = PacketConverter.GetBytes(obj);
+            var bytes = Helper.GetBytes(obj);
             if (pType == PacketElementTypes.String || pType == PacketElementTypes.Bin)
             {
                 Array.Resize(ref bytes, _sizeOfLenght + bytes.Length);
                 System.Buffer.BlockCopy(bytes, 0, bytes, _sizeOfLenght, bytes.Length - _sizeOfLenght);
-                PacketConverter.GetBytes((DataLenght)(bytes.Length - _sizeOfLenght)).CopyTo(bytes, 0);
+                Helper.GetBytes((DataLenght)(bytes.Length - _sizeOfLenght)).CopyTo(bytes, 0);
             }
             var length = _sizeOfPacketElementType + bytes.Length;
             using (_rwLock.Write())
             {
                 IsRequireSize(length);
 
-                PacketConverter.GetBytes(pType).CopyTo(Buffer, ref Position);
+                Helper.GetBytes(pType).CopyTo(Buffer, ref Position);
 
                 bytes.CopyTo(Buffer, ref Position);
                 _elements++;
@@ -179,10 +179,10 @@ namespace Shared.Network
             if (type == PacketElementTypes.None) return default(T);
             using (_rwLock.Read())
             {
-                PacketConverter.ToObject<PacketElementTypes>(ref Buffer, ref Position);
+                Helper.ToObject<PacketElementTypes>(ref Buffer, ref Position);
                 DataLenght len = 0;
-                if (type == PacketElementTypes.String || type == PacketElementTypes.Bin) PacketConverter.ToObject(out len, ref Buffer, ref Position);
-                return PacketConverter.ToObjectWithLenght<T>(ref Buffer, ref Position, len);
+                if (type == PacketElementTypes.String || type == PacketElementTypes.Bin) Helper.ToObject(out len, ref Buffer, ref Position);
+                return Helper.ToObjectWithLenght<T>(ref Buffer, ref Position, len);
             }
         }
         public Packet Read<T>(out T o)
@@ -268,8 +268,8 @@ namespace Shared.Network
                     throw new Exception(Localization.Get("Shared.Network.Packet.Build.Exception"));
 
                 {
-                    PacketConverter.GetBytes(OpCode).CopyTo(buffer, ref offset);
-                    PacketConverter.GetBytes(Id).CopyTo(buffer, ref offset);
+                    Helper.GetBytes(OpCode).CopyTo(buffer, ref offset);
+                    Helper.GetBytes(Id).CopyTo(buffer, ref offset);
 
                     WriteVarInt(_bodyLength, buffer, ref offset);
                     WriteVarInt(_elements, buffer, ref offset);

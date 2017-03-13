@@ -1,12 +1,37 @@
-using System;
+﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Shared.Util
 {
-    public static class PacketConverter
+    public static class Helper
     {
+        public static bool IsNullOrWhiteSpace(this string value)
+        {
+            return value == null || value.All(char.IsWhiteSpace);
+        }
+
+        public static bool TryParse(Type _enum, string value, bool ignoreCase, out object result)
+        {
+            if (Enum.IsDefined(_enum, value))
+            {
+                result = Enum.Parse(_enum, value, ignoreCase);
+                return true;
+            }
+
+            result = null;
+            return false;
+        }
+
+        public static bool HasFlag(ulong value, ulong flag)
+        {
+            return (value & flag) > 0;
+        }
+
+
+
         private static readonly Type Bct = typeof(BitConverter);
         private static readonly Encoding Encoding = Encoding.UTF8;
 
@@ -148,6 +173,5 @@ namespace Shared.Util
             else throw new InvalidDataException("Object Not Recognized");
             return bytesRet;
         }
-
     }
 }

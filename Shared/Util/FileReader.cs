@@ -40,7 +40,7 @@ namespace Shared.Util
 
                 line = line.Trim();
 
-                if (string.IsNullOrWhiteSpace(line))
+                if (line.IsNullOrWhiteSpace())
                     continue;
 
                 // Ignore very short or commented lines

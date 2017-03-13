@@ -86,7 +86,7 @@ namespace Shared.Util.Commands
                     Log.Info(Localization.Get("Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Unknown"), args[1]);
                     return CommandResult.Fail;
                 }
-                Log.Info(Localization.Get("Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Code"), consoleCommand.Name, string.IsNullOrWhiteSpace(consoleCommand.Usage) ? Localization.Get("Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Null") : consoleCommand.Usage, consoleCommand.Description);
+                Log.Info(Localization.Get("Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Code"), consoleCommand.Name, consoleCommand.Usage.IsNullOrWhiteSpace() ? Localization.Get("Shared.Util.Commands.ConsoleCommands.HandleHelp.Info.Null") : consoleCommand.Usage, consoleCommand.Description);
             }
             return CommandResult.Okay;
         }
